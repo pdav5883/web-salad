@@ -6,7 +6,16 @@ app = Flask(__name__)
 def home():
 	return render_template("index.html")
 
+@app.route("/mdn2/")
+def mdn():
+    return render_template("mdn_index.html")
+
 @app.route("/ok/")
 @app.route("/ok/<name>")
-def ok(name="Jose"):
-	return render_template("index.html", name=name)
+def ok(name="Kelly"):
+	return render_template("ok.html", name=name)
+
+
+@app.route("/apple/")
+def apple():
+	return render_template("apple.html")
