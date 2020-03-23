@@ -1,13 +1,11 @@
 <!doctype html>
-<title>New Player</title>
-<h1>What's Your Name?</h1>
-
-// TODO: how to submit a list
+<title>New Words</title>
+<h1>Put Your Words in the Bowl</h1>
 
 <form action="/submitwords">
-  <label for="word1">First Word:</label><br>
-  <input type="text" id="word1" name="word1" value=""><br>
-  <label for="word2">Second Word:</label><br>
-  <input type="text" id="word2" name="word2" value=""><br><br>
+  {% for index in range(num_words | int) %}
+  <label for="word{{index}}">Word {{index+1}}:</label><br>
+  <input type="text" id="word{{index}}" name="words[]" value=""><br>
+  {% endfor %}
   <input type="submit" value="Submit">
 </form>

@@ -1,5 +1,6 @@
 import string
 import random
+import json
 
 from flask import Flask, render_template, url_for, redirect, request, make_response
 
@@ -26,10 +27,16 @@ def admin():
 @app.route("/addgame/")
 def add_game():
     new_gid = request.args.get("new_gid", None)
+    num_words = request.args.get("num_words", 5)
+    t1 = request.args.get("t1", 30)
+    t2 = request.args.get("t2", 30)
+    t3 = request.args.get("t3", 30)
+
+    data = {"gid": new_gid, "num_words": num_words, "t1": t1, "t2": t2, "t3": t3}
 
     if new_gid:
         with open(gpath, "a") as fptr:
-            fptr.write(f"{new_gid}\n")
+            fptr.write(f"{json.dumps(data)}\n")
 
         return redirect(url_for("home"))
     else:
@@ -47,14 +54,79 @@ def join_game():
         return redirect(url_for("bad"))
 
 
+@app.route("/newplayer/")
+def new_player():
+    # maybe check to make sure a player doesn't already exist in cookies to stop one user creating multiple players
+    if not auth_game(request):
+        return redirect(url_for("bad"))
+    return render_template("newplayer.html")
+
+
+@app.route("/submitplayer/")
+def submit_player():
+    if not auth_game(request):
+        return redirect(url_for("bad"))
+
+    pname = request.args.get("pname", None)
+    if not pname:
+        return redirect(url_for("submit_player"))
+
+    pid = create_rand_id()
+
+    data = {"pid": pid, "pname": pname}
+
+    with open(ppath, "a") as fptr:
+        fptr.write(f"{json.dumps(data)}\n")
+
+    resp = make_response(redirect(url_for("new_words")))
+    resp.set_cookie("pid", pid)
+    return resp
+
+
+@app.route("/newwords/")
+def new_words():
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    gid = request.cookies.get("gid")
+    game = get_game(gid)
+
+    return render_template("newwords.html", num_words=game["num_words"])
+
+
+@app.route("/submitwords/")
+def submit_words():
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    words = request.args.getlist("words[]")
+
+    # TODO: do something if not all words are filled in?
+
+    with open(wpath, "a") as fptr:
+        for word in words:
+            fptr.write(f"{word}\n")
+    return redirect(url_for("good"))
+
+
+@app.route("/bad/")
+def bad():
+    return "You messed up :("
+
+
+@app.route("/good/")
+def good():
+    return "Good job :)"
+
+
 def check_game_id(gid):
     """
     Check game ID string against db
     """
-    with open(gpath, "r") as fptr:
-        games = fptr.read().split()
+    games = get_games()
+    game_ids = [game["gid"] for game in games]
 
-    if gid in games:
+    if gid in game_ids:
         return True
     else:
         return False
@@ -64,10 +136,8 @@ def check_player_id(pid):
     """
     Check player ID string against db
     """
-    with open(ppath, "r") as fptr:
-        players = fptr.read().split()
-
-    player_ids = [s.split(":")[0] for s in players]
+    players = get_players()
+    player_ids = [player["pid"] for player in players]
 
     if pid in player_ids:
         return True
@@ -102,56 +172,33 @@ def auth_player(req):
         return False
 
 
-@app.route("/newplayer/")
-def new_player():
-    # maybe check to make sure a player doesn't already exist in cookies to stop one user creating multiple players
-    if not auth_game(request):
-        return redirect(url_for("bad"))
-    return render_template("newplayer.html")
+def get_games():
+    with open(gpath, "r") as fptr:
+        rows = fptr.read().splitlines()
+
+    return [json.loads(row) for row in rows if row]
 
 
-@app.route("/submitplayer/")
-def submit_player():
-    if not auth_game(request):
-        return redirect(url_for("bad"))
+def get_players():
+    with open(ppath, "r") as fptr:
+        rows = fptr.read().splitlines()
 
-    pname = request.args.get("pname", None)
-    if not pname:
-        return redirect(url_for("submit_player"))
-
-    pid = create_rand_id()
-
-    with open(ppath, "a") as fptr:
-        fptr.write(f"{pid}:{pname}\n")
-
-    resp = make_response(redirect(url_for("new_words")))
-    resp.set_cookie("pid", pid)
-    return resp
+    return [json.loads(row) for row in rows if row]
 
 
-@app.route("/newwords/")
-def new_words():
-    if not auth_player(request):
-        return redirect(url_for("bad"))
-    return render_template("newwords.html")
+def get_game(gid):
+    games = get_games()
+
+    for game in games:
+        if game["gid"] == gid:
+            return game
+    return None
 
 
-@app.route("/submitwords/")
-def submit_words():
-    if not auth_player(request):
-        return redirect(url_for("bad"))
-    
-    with open(wpath, "a") as fptr:
-        fptr.write(f"{request.args.get('word1', 'failed')}\n")
-        fptr.write(f"{request.args.get('word2', 'failed')}\n")
-    return redirect(url_for("good"))
+def get_player(pid):
+    players = get_players()
 
-
-@app.route("/bad/")
-def bad():
-    return "You messed up :("
-
-
-@app.route("/good/")
-def good():
-    return "Good job :)"
+    for player in players:
+        if player["pid"] == pid:
+            return player
+    return None
