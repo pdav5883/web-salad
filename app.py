@@ -1,14 +1,9 @@
-import string
 import random
-import json
+from itertools import cycle
 
 from flask import Flask, render_template, url_for, redirect, request, make_response
 
-
-
-gpath = "data/games.txt"
-ppath = "data/players.txt"
-wpath = "data/words.txt"
+from utils import *
 
 app = Flask(__name__)
 
@@ -24,20 +19,17 @@ def admin():
     return render_template("admin.html")
 
 
-@app.route("/addgame/")
-def add_game():
-    new_gid = request.args.get("new_gid", None)
-    num_words = request.args.get("num_words", 5)
-    t1 = request.args.get("t1", 30)
-    t2 = request.args.get("t2", 30)
-    t3 = request.args.get("t3", 30)
+@app.route("/submitgame/")
+def submit_game():
+    new_gid = request.args.get("new_gid")
+    num_words = request.args.get("num_words")
+    t1 = request.args.get("t1")
+    t2 = request.args.get("t2")
+    t3 = request.args.get("t3")
 
-    data = {"gid": new_gid, "num_words": num_words, "t1": t1, "t2": t2, "t3": t3}
+    gdata = {"num_words": num_words, "t1": t1, "t2": t2, "t3": t3, "started": False}
 
-    if new_gid:
-        with open(gpath, "a") as fptr:
-            fptr.write(f"{json.dumps(data)}\n")
-
+    if add_game(new_gid, gdata):
         return redirect(url_for("home"))
     else:
         return redirect(url_for("admin"))
@@ -46,7 +38,7 @@ def add_game():
 @app.route("/joingame/")
 def join_game():
     gid = request.args.get("gid", None)
-    if gid and check_game_id(gid):
+    if gid and is_valid_game_id(gid) and not is_game_started(gid):
         resp = make_response(redirect(url_for("new_player")))
         resp.set_cookie("gid", gid)
         return resp
@@ -68,18 +60,24 @@ def submit_player():
         return redirect(url_for("bad"))
 
     pname = request.args.get("pname", None)
+
     if not pname:
         return redirect(url_for("submit_player"))
 
-    pid = create_rand_id()
+    new_pid = create_rand_id()
 
-    data = {"pid": pid, "pname": pname}
+    # if this is the first player, assign them captain
+    if len(get_players()) == 0:
+        captain = True
+    else:
+        captain = False
 
-    with open(ppath, "a") as fptr:
-        fptr.write(f"{json.dumps(data)}\n")
+    pdata = {"pname": pname, "captain": captain, "team": None}
+
+    add_player(new_pid, pdata)
 
     resp = make_response(redirect(url_for("new_words")))
-    resp.set_cookie("pid", pid)
+    resp.set_cookie("pid", new_pid)
     return resp
 
 
@@ -103,15 +101,60 @@ def submit_words():
 
     # TODO: do something if not all words are filled in?
 
-    with open(wpath, "a") as fptr:
-        for word in words:
-            fptr.write(f"{word}\n")
-    return redirect(url_for("good"))
+    add_words(words)
+    return redirect(url_for("wait_for_players"))
+
+
+@app.route("/roster/")
+def wait_for_players():
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    player_names = [player["pname"] for player in get_players().values()]
+
+    player = get_player(request.cookies.get("pid"))
+
+    return render_template("roster.html", names=player_names, captain=player["captain"])
+
+
+@app.route("/preparegame/")
+def prepare_game():
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    if is_game_started(request.cookies.get("gid")):
+        return redirect(url_for("scoreboard"))
+
+    if not is_player_captain(request.cookies.get("pid")):
+        return redirect(url_for("wait_for_players"))
+
+    # assign teams
+    players = get_players()
+    teams = cycle(["A", "B"])
+    for player in players.values():
+        player["team"] = next(teams)
+
+    # set game to started
+    games = get_games()
+    games[request.cookies.get("gid")]["started"] = True
+
+    update_games(games)
+    update_players(players)
+
+    return redirect(url_for("scoreboard"))
+
+
+@app.route("/scoreboard/")
+def scoreboard():
+    return "SCOREBOARD"
+
+def make_teams():
+    pass
 
 
 @app.route("/bad/")
 def bad():
-    return "You messed up :("
+    return "You're not allowed here :("
 
 
 @app.route("/good/")
@@ -119,86 +162,3 @@ def good():
     return "Good job :)"
 
 
-def check_game_id(gid):
-    """
-    Check game ID string against db
-    """
-    games = get_games()
-    game_ids = [game["gid"] for game in games]
-
-    if gid in game_ids:
-        return True
-    else:
-        return False
-
-
-def check_player_id(pid):
-    """
-    Check player ID string against db
-    """
-    players = get_players()
-    player_ids = [player["pid"] for player in players]
-
-    if pid in player_ids:
-        return True
-    else:
-        return False
-
-
-def create_rand_id(n=10):
-    chars = string.ascii_uppercase
-    return "".join(random.choice(chars) for _ in range(n))
-
-
-def auth_game(req):
-    """
-    Check cookies for game ID
-    """
-    gid = req.cookies.get("gid", None)
-    if gid:
-        return check_game_id(gid)
-    else:
-        return False
-
-
-def auth_player(req):
-    """
-    Check cookies for valid player ID
-    """
-    pid = req.cookies.get("pid", None)
-    if pid:
-        return check_player_id(pid)
-    else:
-        return False
-
-
-def get_games():
-    with open(gpath, "r") as fptr:
-        rows = fptr.read().splitlines()
-
-    return [json.loads(row) for row in rows if row]
-
-
-def get_players():
-    with open(ppath, "r") as fptr:
-        rows = fptr.read().splitlines()
-
-    return [json.loads(row) for row in rows if row]
-
-
-def get_game(gid):
-    games = get_games()
-
-    for game in games:
-        if game["gid"] == gid:
-            return game
-    return None
-
-
-def get_player(pid):
-    players = get_players()
-
-    for player in players:
-        if player["pid"] == pid:
-            return player
-    return None
