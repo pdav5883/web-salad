@@ -1,0 +1,15 @@
+<!doctype html>
+<title>Roster</title>
+<h1>Game Participants</h1>
+
+<ul>
+{% for name in names %}
+    <li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+<p>Waiting for players...</p>
+
+<form action="/preparegame/">
+    <input type="submit" value="Start Game!" />
+</form>
