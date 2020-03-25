@@ -1,0 +1,29 @@
+<!doctype html>
+<title>Scoreboard</title>
+<h1>Game Scoreboard</h1>
+<h2> Round {{ round }}</h2>
+{% if my_turn %}
+<form action="/prepareturn/">
+    <input type="submit" value="Start Your Turn!" />
+</form>
+{% else %}
+<p>It's not your turn yet...</p>
+{% endif %}
+<h3>Up Now: {{ curr_name }}</h3>
+<h3>Up Next: {{ next_name }}</h3>
+
+<h3> Team A: {{ score_a }}</h3>
+<ul>
+{% for name in names_a %}
+    <li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+<h3> Team B: {{ score_b }}</h3>
+<ul>
+{% for name in names_b %}
+    <li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+<h4>Words remaining in round: {{ words_remaining }}</h4>

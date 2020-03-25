@@ -1,7 +1,8 @@
 import string
 import random
 import json
-from typing import List
+from typing import List, Tuple
+import copy
 
 gpath = "data/games.txt"
 ppath = "data/players.txt"
@@ -84,12 +85,21 @@ def get_words() -> dict:
         return json.load(fptr)
 
 
+def get_words_remaining() -> List[Tuple[str, str]]:
+    words = get_words()
+    return [(wid, wdata["word"]) for wid, wdata in words.items() if not wdata["used"]]
+
+
 def get_game(gid):
     return get_games().get(gid, None)
 
 
 def get_player(pid):
     return get_players().get(pid, None)
+
+
+def get_player_name(pid):
+    return get_player(pid).get("pname")
 
 
 def update_games(games: dict):
@@ -111,7 +121,7 @@ def is_valid_player_id(pid) -> bool:
 
 
 def is_game_started(gid) -> bool:
-    return get_games().get(gid).get("started")
+    return get_games().get(gid, {}).get("started", False)
 
 
 def is_player_captain(pid) -> bool:
@@ -121,3 +131,19 @@ def is_player_captain(pid) -> bool:
 def create_rand_id(n=10) -> str:
     chars = string.ascii_uppercase
     return "".join(random.choice(chars) for _ in range(n))
+
+
+def bump_player_queue(queue: List[List[str]]) -> Tuple[str, str, List[List[str]]]:
+    """
+    Increment the player queue.
+    Return the current player, next player, and new queue
+    """
+    q = copy.deepcopy(queue)
+
+    current_team = q.pop(0)
+    current_player = current_team.pop(0)
+    current_team.append(current_player)
+    q.append(current_team)
+    next_player = q[0][0]
+
+    return current_player, next_player, q

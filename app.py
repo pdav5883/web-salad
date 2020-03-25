@@ -1,4 +1,4 @@
-import random
+from random import shuffle
 from itertools import cycle
 
 from flask import Flask, render_template, url_for, redirect, request, make_response
@@ -130,13 +130,32 @@ def prepare_game():
 
     # assign teams
     players = get_players()
-    teams = cycle(["A", "B"])
-    for player in players.values():
-        player["team"] = next(teams)
+    teams_id = {"A": [], "B": []}
+    teams_name = {"A": [], "B": []}
+    a_b = cycle(["A", "B"])
+    pids = list(players.keys())
+    shuffle(pids)
+    for pid in pids:
+        player = players[pid]
+        team = next(a_b)
+        player["team"] = team
+        teams_id[team].append(pid)
+        teams_name[team].append(player["pname"])
 
-    # set game to started
+    # set up the game
     games = get_games()
-    games[request.cookies.get("gid")]["started"] = True
+    game = games[request.cookies.get("gid")]
+    game["started"] = True
+    curr_id, next_id, queue = bump_player_queue([teams_id["A"], teams_id["B"]])
+    game["queue"] = queue
+    game["curr_id"] = curr_id
+    game["next_id"] = next_id
+    game["team_a"] = teams_name["A"]
+    game["team_b"] = teams_name["B"]
+    game["score_a"] = 0
+    game["score_b"] = 0
+    game["round"] = 1
+    game["num_remaining"] = len(get_words_remaining())
 
     update_games(games)
     update_players(players)
@@ -146,10 +165,32 @@ def prepare_game():
 
 @app.route("/scoreboard/")
 def scoreboard():
-    return "SCOREBOARD"
+    game = get_game(request.cookies.get("gid"))
 
-def make_teams():
-    pass
+    curr_name = get_player_name(game["curr_id"])
+    next_name = get_player_name(game["next_id"])
+    my_turn = (request.cookies.get("pid") == game["curr_id"])
+
+    return render_template("scoreboard.html",
+                           round=game["round"],
+                           curr_name=curr_name,
+                           next_name=next_name,
+                           my_turn=my_turn,
+                           score_a=game["score_a"],
+                           score_b=game["score_b"],
+                           names_a=game["team_a"],
+                           names_b=game["team_b"],
+                           words_remaining=game["num_remaining"])
+
+
+@app.route("/prepareturn/")
+def prepare_turn():
+    return redirect(url_for("my_turn"))
+
+
+@app.route("/myturn/")
+def my_turn():
+    return "It's your turn!"
 
 
 @app.route("/bad/")
@@ -160,5 +201,18 @@ def bad():
 @app.route("/good/")
 def good():
     return "Good job :)"
+
+@app.route("/test/")
+def test():
+    return render_template("scoreboard.html",
+                    round=1,
+                    current_turn="Peter",
+                    my_turn=True,
+                    next_turn="Kelly",
+                    score_a=20,
+                    score_b=10,
+                    names_a=["Matt","Molly","Kelly"],
+                    names_b=["Emily","Peter","Juan"],
+                           words_remaining=5)
 
 
