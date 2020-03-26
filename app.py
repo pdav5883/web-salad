@@ -156,6 +156,7 @@ def prepare_game():
     game["score_b"] = 0
     game["round"] = 1
     game["num_remaining"] = len(get_words_remaining())
+    game["time_remaining"] = game["t1"]
 
     update_games(games)
     update_players(players)
@@ -185,12 +186,25 @@ def scoreboard():
 
 @app.route("/prepareturn/")
 def prepare_turn():
+    words = get_words_remaining()
+    time = get_time_remaining(request.cookies.get("gid"))
+
     return redirect(url_for("my_turn"))
 
 
 @app.route("/myturn/")
 def my_turn():
     return "It's your turn!"
+
+
+@app.route("/submitturn/")
+def submit_turn():
+    # submit words and update scores
+    # update the game
+    # did we just end a round, then go to /endround and set time remaining
+    # if not then bump the queue, set time and go to /scoreboard
+
+    return redirect(url_for("scoreboard"))
 
 
 @app.route("/bad/")
@@ -204,15 +218,11 @@ def good():
 
 @app.route("/test/")
 def test():
-    return render_template("scoreboard.html",
-                    round=1,
-                    current_turn="Peter",
-                    my_turn=True,
-                    next_turn="Kelly",
-                    score_a=20,
-                    score_b=10,
-                    names_a=["Matt","Molly","Kelly"],
-                    names_b=["Emily","Peter","Juan"],
-                           words_remaining=5)
+    word_pairs = get_words_remaining()
+    shuffle(word_pairs)
+    wids, words = map(list, zip(*word_pairs))
+    return render_template("myturn.html",
+                           wids=json.dumps(wids),
+                           words=json.dumps(words))
 
 

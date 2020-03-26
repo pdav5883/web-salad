@@ -85,13 +85,17 @@ def get_words() -> dict:
         return json.load(fptr)
 
 
-def get_words_remaining() -> List[Tuple[str, str]]:
+def get_words_remaining() -> List[List[str]]:
     words = get_words()
-    return [(wid, wdata["word"]) for wid, wdata in words.items() if not wdata["used"]]
+    return [[wid, wdata["word"]] for wid, wdata in words.items() if not wdata["used"]]
 
 
 def get_game(gid):
     return get_games().get(gid, None)
+
+
+def get_time_remaining(gid):
+    return get_games().get(gid).get("time_remaining")
 
 
 def get_player(pid):
