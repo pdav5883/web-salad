@@ -1,0 +1,16 @@
+<!doctype html>
+<title>Roster</title>
+<h1>My Turn</h1>
+
+<h2 id="current_word">...</h2>
+
+<button id="start_button" type="button">START!</button>
+<button id="yes_button" type="button" style="background-color:green">YES!</button>
+<button id="no_button" type="button" style="background-color:red">NO!</button>
+
+<script type="text/javascript">
+    var words = {{ words|safe }}
+    var wids = {{ wids|safe }}
+</script>
+
+<script type="text/javascript" src="/static/scripts/myturn.js"></script>
