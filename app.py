@@ -7,8 +7,6 @@ from utils import *
 
 app = Flask(__name__)
 
-# TODO: error when team A finishes a round with negatives -- those get added to team a score
-
 
 @app.route("/")
 def home():
@@ -168,8 +166,10 @@ def prepare_game():
 
 @app.route("/scoreboard/")
 def scoreboard():
-    # TODO check if the game is over
     game = get_game(request.cookies.get("gid"))
+
+    if game["complete"]:
+        return redirect(url_for("game_over"))
 
     curr_name = get_player_name(game["curr_id"])
     next_name = get_player_name(game["next_id"])
@@ -215,7 +215,7 @@ def submit_turn():
     game = games[request.cookies.get("gid")]
     player = get_player(request.cookies.get("pid"))
     active_team = player["team"]
-    inactive_team = "a" if active_team == "b" else "a"
+    inactive_team = "a" if active_team == "b" else "b"
     words = get_words()
 
     game[f"score_{active_team}"] += len(correct_wids)
@@ -227,8 +227,7 @@ def submit_turn():
     if int(time_remaining) > 0:
         # the game is over!
         if game["round"] == 3:
-            # TODO: set something to signal that the game is over
-            pass
+            game["complete"] = True
 
         # move to the next round, same person's turn with the balance of their time
         else:
@@ -246,6 +245,29 @@ def submit_turn():
     update_words(words)
 
     return redirect(url_for("scoreboard"))
+
+
+@app.route("/gameover")
+def game_over():
+    game = get_game(request.cookies.get("gid"))
+
+    if game["score_a"] > game["score_b"]:
+        winner_str = "Congratulations Team A!"
+        game["winner"] = "a"
+    elif game["score_a"] < game["score_b"]:
+        winner_str = "Congratulations Team B!"
+        game["winner"] = "b"
+    else:
+        winner_str = "Woah, a tie!!"
+        game["winner"] = None
+
+    return render_template("gameover.html",
+                           winner_str=winner_str,
+                           score_a=game["score_a"],
+                           score_b=game["score_b"],
+                           names_a=game["team_a"],
+                           names_b=game["team_b"]
+                           )
 
 
 @app.route("/bad/")

@@ -1,0 +1,19 @@
+<!doctype html>
+<title>Game Over</title>
+<h1>{{ winner_str }}</h1>
+
+<h3> Team A: {{ score_a }}</h3>
+<ul>
+{% for name in names_a %}
+    <li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+<h3> Team B: {{ score_b }}</h3>
+<ul>
+{% for name in names_b %}
+    <li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+<a href="/">Play Again!</a>

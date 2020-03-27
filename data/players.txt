@@ -1,1 +1,1 @@
-{"AICUPXDSFP": {"pname": "Kelly", "captain": true, "team": "b"}, "KUQZGIMRPV": {"pname": "Peter", "captain": false, "team": "a"}}
+{}

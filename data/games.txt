@@ -1,1 +1,3 @@
-{"abc": {"num_words": "5", "t1": "5", "t2": "5", "t3": "5", "started": true, "queue": [["AICUPXDSFP"], ["KUQZGIMRPV"]], "curr_id": "KUQZGIMRPV", "next_id": "AICUPXDSFP", "team_a": ["Peter"], "team_b": ["Kelly"], "score_a": 26, "score_b": 4, "round": 3, "num_remaining": 10, "time_remaining": "5"}, "xyz": {"num_words": "3", "t1": "5", "t2": "5", "t3": "5", "started": false}}
+{"abc": {"num_words": "5", "t1": "5", "t2": "5", "t3": "5", "started": false, "complete": false},
+"xyz": {"num_words": "3", "t1": "5", "t2": "5", "t3": "5", "started": false, "complete": false}}
+
