@@ -116,6 +116,17 @@ def update_players(players: dict):
         json.dump(players, fptr)
 
 
+def update_words(words: dict):
+    with open(wpath, "w") as fptr:
+        json.dump(words, fptr)
+
+
+def reset_words(words: dict) -> dict:
+    for wdata in words.values():
+        wdata["used"] = False
+    return words
+
+
 def is_valid_game_id(gid) -> bool:
     return gid in get_games()
 

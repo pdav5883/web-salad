@@ -1,1 +1,1 @@
-{}
+{"ZDWWYGNAQA": {"word": "a", "used": true}, "XIVCUXXVZR": {"word": "b", "used": true}, "VVCABQELHB": {"word": "c", "used": true}, "PGYMCNJVOR": {"word": "d", "used": true}, "SQNROXJRIU": {"word": "e", "used": true}, "OGYXYAXVTQ": {"word": "f", "used": true}, "ESDSOXLZCD": {"word": "g", "used": true}, "AEQYNATXKE": {"word": "h", "used": true}, "JJIEXPLABV": {"word": "i", "used": true}, "ZPMYMQYPCB": {"word": "j", "used": true}}

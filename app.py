@@ -7,6 +7,8 @@ from utils import *
 
 app = Flask(__name__)
 
+# TODO: error when team A finishes a round with negatives -- those get added to team a score
+
 
 @app.route("/")
 def home():
@@ -130,9 +132,9 @@ def prepare_game():
 
     # assign teams
     players = get_players()
-    teams_id = {"A": [], "B": []}
-    teams_name = {"A": [], "B": []}
-    a_b = cycle(["A", "B"])
+    teams_id = {"a": [], "b": []}
+    teams_name = {"a": [], "b": []}
+    a_b = cycle(["a", "b"])
     pids = list(players.keys())
     shuffle(pids)
     for pid in pids:
@@ -146,12 +148,12 @@ def prepare_game():
     games = get_games()
     game = games[request.cookies.get("gid")]
     game["started"] = True
-    curr_id, next_id, queue = bump_player_queue([teams_id["A"], teams_id["B"]])
+    curr_id, next_id, queue = bump_player_queue([teams_id["a"], teams_id["b"]])
     game["queue"] = queue
     game["curr_id"] = curr_id
     game["next_id"] = next_id
-    game["team_a"] = teams_name["A"]
-    game["team_b"] = teams_name["B"]
+    game["team_a"] = teams_name["a"]
+    game["team_b"] = teams_name["b"]
     game["score_a"] = 0
     game["score_b"] = 0
     game["round"] = 1
@@ -166,6 +168,7 @@ def prepare_game():
 
 @app.route("/scoreboard/")
 def scoreboard():
+    # TODO check if the game is over
     game = get_game(request.cookies.get("gid"))
 
     curr_name = get_player_name(game["curr_id"])
@@ -184,25 +187,63 @@ def scoreboard():
                            words_remaining=game["num_remaining"])
 
 
-@app.route("/prepareturn/")
-def prepare_turn():
-    words = get_words_remaining()
-    time = get_time_remaining(request.cookies.get("gid"))
-
-    return redirect(url_for("my_turn"))
-
-
 @app.route("/myturn/")
 def my_turn():
-    return "It's your turn!"
+    # TODO: need some sort of check so that you can only get here when it's your turn hasn't started yet
+    word_pairs = get_words_remaining()
+    shuffle(word_pairs)
+    wids, words = map(list, zip(*word_pairs))
+    time_remaining = get_time_remaining(request.cookies.get("gid")
+                                        )
+    return render_template("myturn.html",
+                           wids=json.dumps(wids),
+                           words=json.dumps(words),
+                           time_remaining=time_remaining)
 
 
-@app.route("/submitturn/")
+@app.route("/submitturn/", methods=["POST"])
 def submit_turn():
     # submit words and update scores
     # update the game
     # did we just end a round, then go to /endround and set time remaining
     # if not then bump the queue, set time and go to /scoreboard
+    correct_wids = request.form.getlist("correct_wids")
+    miss_wids = request.form.getlist("miss_wids")
+    time_remaining = request.form.get("time_remaining")
+
+    games = get_games()
+    game = games[request.cookies.get("gid")]
+    player = get_player(request.cookies.get("pid"))
+    active_team = player["team"]
+    inactive_team = "a" if active_team == "b" else "a"
+    words = get_words()
+
+    game[f"score_{active_team}"] += len(correct_wids)
+    game[f"score_{inactive_team}"] += len(miss_wids)
+
+    for wid in correct_wids + miss_wids:
+        words[wid]["used"] = True
+
+    if int(time_remaining) > 0:
+        # the game is over!
+        if game["round"] == 3:
+            # TODO: set something to signal that the game is over
+            pass
+
+        # move to the next round, same person's turn with the balance of their time
+        else:
+            game["round"] += 1
+            words = reset_words(words)
+            game["time_remaining"] = time_remaining
+            game["num_remaining"] = len(words)
+
+    else:
+        game["curr_id"], game["next_id"], game["queue"] = bump_player_queue(game["queue"])
+        game["time_remaining"] = game[f"t{game['round']}"]
+        game["num_remaining"] -= len(correct_wids + miss_wids)
+
+    update_games(games)
+    update_words(words)
 
     return redirect(url_for("scoreboard"))
 
@@ -223,6 +264,7 @@ def test():
     wids, words = map(list, zip(*word_pairs))
     return render_template("myturn.html",
                            wids=json.dumps(wids),
-                           words=json.dumps(words))
+                           words=json.dumps(words),
+                           time_remaining=10)
 
 
