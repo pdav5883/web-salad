@@ -5,6 +5,7 @@ let current_word = document.getElementById("current_word")
 let time_remaining = document.getElementById("time_remaining")
 let correct_heading = document.getElementById("correct_heading")
 let miss_heading = document.getElementById("miss_heading")
+let audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
 let timer
 
 let next_word = words.pop()
@@ -110,12 +111,36 @@ function next() {
 
 }
 
+//duration of the tone in milliseconds. Default is 500
+//frequency of the tone in hertz. default is 440
+//volume of the tone. Default is 1, off is 0.
+//type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+//callback to use on end of tone
+function beep(duration, frequency, volume, type, callback) {
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (volume){gainNode.gain.value = volume;}
+    if (frequency){oscillator.frequency.value = frequency;}
+    if (type){oscillator.type = type;}
+    if (callback){oscillator.onended = callback;}
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + ((duration || 500) / 1000));
+};
+
 function cycle_timer() {
     counter--
     time_remaining.textContent = counter
 
     if (counter == 0) { // or no words remaining
+        beep(500, 300, 0.25, "triangle")
         stop_turn()
+    } else if (counter == 5) { // beep for five second warning
+        beep(100, 500, 0.25, "sine")
     }
 }
 
