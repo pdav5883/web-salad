@@ -8,6 +8,9 @@
 </form>
 {% else %}
 <p>It's not your turn yet...</p>
+<form action="/scoreboard/">
+    <input type="submit" value="Update" />
+</form>
 {% endif %}
 <h3>Up Now: {{ curr_name }}</h3>
 <h3>Up Next: {{ next_name }}</h3>
