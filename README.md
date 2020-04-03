@@ -1,6 +1,10 @@
 # web-salad
 Play some salad bowl online
 
+## Tags
+- `v0.1`: Initial working version
+- `v0.2`: Minor game experience modifications (button size, sound alerts, update buttons)
+
 
 ## Local Execution
 Run `export FLASK_APP=app.py` and `flask run`. By default serve at `localhost:5000`.
@@ -17,7 +21,7 @@ SSH into the EC2 instance and run
 - `sudo pip3 install flask`
 - `mkdir v{version}`
 - `cd v{version}`
-- `aws s3 cp s3://{your-bucket}/web-salad.zip`
+- `aws s3 cp s3://{your-bucket}/v{version}/web-salad.zip .`
 - `unzip web-salad.zip`
 - `sudo python3 app.py`
 
