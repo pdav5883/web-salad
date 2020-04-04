@@ -40,8 +40,8 @@ class Word:
 class Attempt:
     aid: str        # PK
     wid: str        # FK: What word was attempted?
-    gid: str        # FK: What game did the attempt occur in?
     pid: str        # FK: What player was giving the clue?
+    gid: str        # FK: What game did the attempt occur in?
     round: int      # What round did this attempt occur in?
     success: bool   # Did the team guessing get the point?
     failure: bool   # Did the team guessing give the point to the other team?
