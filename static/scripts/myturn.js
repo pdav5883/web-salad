@@ -137,10 +137,10 @@ function cycle_timer() {
     time_remaining.textContent = counter
 
     if (counter == 0) { // or no words remaining
-        beep(500, 300, 0.25, "triangle")
+        beep(500, 300, 0.5, "triangle")
         stop_turn()
     } else if (counter == 5) { // beep for five second warning
-        beep(100, 500, 0.25, "sine")
+        beep(100, 500, 0.5, "sine")
     }
 }
 

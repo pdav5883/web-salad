@@ -11,7 +11,11 @@
 <p>Waiting for players...</p>
 
 <form action="/preparegame/">
+    {% if captain %}
     <input type="submit" value="Start Game!" />
+    {% else %}
+    <input type="submit" value="Update" />
+    {% endif %}
 </form>
 
 {% if captain %}
@@ -19,3 +23,7 @@
 {% else %}
 <p> You are not the captain...wait for the captain to start!</p>
 {% endif %}
+
+<button id="beep_button" type="button">Beep!</button>
+
+<script type="text/javascript" src="/static/scripts/beeptest.js"></script>
