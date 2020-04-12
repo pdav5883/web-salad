@@ -1,12 +1,17 @@
 import string
 import random
 import json
-from typing import List, Tuple
+from typing import List, Tuple, Union,
 import copy
+import sqlite3
 
-gpath = "data/games.txt"
-ppath = "data/players.txt"
-wpath = "data/words.txt"
+from model import Game, Player, Word, Attempt
+
+conn = sqlite3("data/salad.db")
+
+gpath = None
+ppath = None
+wpath = None
 
 
 def auth_game(req) -> bool:
@@ -31,79 +36,103 @@ def auth_player(req) -> bool:
         return False
 
 
-def add_game(gid, gdata) -> bool:
-    games = get_games()
+def entry_exists_by_obj(entry: Union[Game, Player, Word, Attempt]) -> bool:
+    """
+    Checks if the ID of the proposed entry already exists in the DB
+    """
+    query = f"SELECT 1 FROM {entry.table} WHERE id = '{entry.id}'"
+    return True if conn.execute(query).fetchone() else False
 
-    # don't want to overwrite a game that already exists
-    if gid in games:
+
+def entry_exists_by_id(entry_id: str, table) -> bool:
+    """
+    Checks if the ID already exists in the DB
+    """
+    query = f"SELECT 1 FROM {table} WHERE id = '{entry_id}'"
+    return True if conn.execute(query).fetchone() else False
+
+
+def add_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
+    """
+    Insert an entry into the correct DB table. Return True if entry successful
+    """
+    if entry_exists_by_obj(entry):
+        print(f"Entry in {entry.table} with id {entry.id} already exists")
         return False
 
-    games[gid] = gdata
-
-    with open(gpath, "w") as fptr:
-        json.dump(games, fptr)
-
+    query = f"INSERT INTO {entry.table} VALUES {entry.__str__()}"
+    conn.execute(query)
+    conn.commit()
     return True
 
 
-def add_player(pid, pdata) -> bool:
-    players = get_players()
-    players[pid] = pdata
+def add_entries(entries: List[Union[Game, Player, Word, Attempt]]) -> bool:
+    """
+    Insert a list of entries into the correct DB table. Commit and return bool if all successful
+    """
+    for entry in entries:
+        if entry_exists_by_obj(entry):
+            print(f"Entry in {entry.table} with id {entry.id} already exists...rolling back previous additions")
+            conn.rollback()
+            return False
 
-    with open(ppath, "w") as fptr:
-        json.dump(players, fptr)
+        query = f"INSERT INTO {entry.table} VALUES {entry.__str__()}"
+        conn.execute(query)
 
+    conn.commit()
     return True
 
 
-def add_words(new_words: List[str]) -> True:
-    words = get_words()
+def update_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
+    """
+    Update an entry in the database with new values, return whether update was success
+    """
+    if not entry_exists_by_obj(entry):
+        print(f"Entry in {entry.table} with id {entry.id} does not exist")
+        return False
 
-    for new_word in new_words:
-        wid = create_rand_id()
-        wdata = {"word": new_word, "used": False}
-        words[wid] = wdata
+    col_list, val_list = entry.get_attr_rep_lists()
+    set_str = ",".join([f"{col} = {val}" for col, val in zip(col_list, val_list)])
 
-    with open(wpath, "w") as fptr:
-        json.dump(words, fptr)
-
+    query = f"UPDATE {entry.table} SET {set_str} WHERE id = '{entry.id}'"
+    conn.execute(query)
+    conn.commit()
     return True
 
 
-def get_games() -> dict:
-    with open(gpath, "r") as fptr:
-        return json.load(fptr)
+def update_entries(entries: List[Union[Game, Player, Word, Attempt]]) -> bool:
+    """
+    Update a list of entries in the correct DB table. Commit and return bool if all successful
+    """
+    for entry in entries:
+        if not entry_exists_by_obj(entry):
+            print(f"Entry in {entry.table} with id {entry.id} does not exist...rolling back previous updates")
+            conn.rollback()
+            return False
+
+        col_list, val_list = entry.get_attr_rep_lists()
+        set_str = ",".join([f"{col} = {val}" for col, val in zip(col_list, val_list)])
+
+        query = f"UPDATE {entry.table} SET {set_str} WHERE id = '{entry.id}'"
+        conn.execute(query)
+
+    conn.commit()
+    return True
 
 
-def get_players() -> dict:
-    with open(ppath, "r") as fptr:
-        return json.load(fptr)
+def get_words_remaining(gid: str) -> List[Word]:
+    """
+    Get a list of Words that have not yet been used in the current round
+    """
+    query = f"SELECT * FROM word WHERE gid = '{gid}' AND used = 0"
+
+    words = list()
+    for word_args in conn.execute(query):
+        words.append(Word(*word_args))
+
+    return words
 
 
-def get_words() -> dict:
-    with open(wpath, "r") as fptr:
-        return json.load(fptr)
-
-
-def get_words_remaining() -> List[List[str]]:
-    words = get_words()
-    return [[wid, wdata["word"]] for wid, wdata in words.items() if not wdata["used"]]
-
-
-def get_game(gid):
-    return get_games().get(gid, None)
-
-
-def get_time_remaining(gid):
-    return get_games().get(gid).get("time_remaining")
-
-
-def get_player(pid):
-    return get_players().get(pid, None)
-
-
-def get_player_name(pid):
-    return get_player(pid).get("pname")
 
 
 def update_games(games: dict):
