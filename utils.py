@@ -1,13 +1,13 @@
 import string
 import random
 import json
-from typing import List, Tuple, Union,
+from typing import List, Tuple, Union
 import copy
 import sqlite3
 
-from model import Game, Player, Word, Attempt
+from model import Entry, Game, Player, Word, Attempt
 
-conn = sqlite3("data/salad.db")
+conn = sqlite3.connect("data/salad.db")
 
 gpath = None
 ppath = None
@@ -36,7 +36,7 @@ def auth_player(req) -> bool:
         return False
 
 
-def entry_exists_by_obj(entry: Union[Game, Player, Word, Attempt]) -> bool:
+def entry_exists_by_obj(entry: Entry) -> bool:
     """
     Checks if the ID of the proposed entry already exists in the DB
     """
@@ -44,15 +44,28 @@ def entry_exists_by_obj(entry: Union[Game, Player, Word, Attempt]) -> bool:
     return True if conn.execute(query).fetchone() else False
 
 
-def entry_exists_by_id(entry_id: str, table) -> bool:
+def entry_exists_by_id(entry_id: str, entry_type: type) -> bool:
     """
     Checks if the ID already exists in the DB
     """
-    query = f"SELECT 1 FROM {table} WHERE id = '{entry_id}'"
+    query = f"SELECT 1 FROM {entry_type.table} WHERE id = '{entry_id}'"
     return True if conn.execute(query).fetchone() else False
 
 
-def add_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
+def get_entry_by_id(entry_id: str, entry_type: type) -> Entry:
+    """
+    Return the entry with given id in given table. None if entry does not exist
+    """
+    query = f"SELECT * FROM {entry_type.table} WHERE id = '{entry_id}'"
+    res = conn.execute(query).fetchone()
+
+    if res:
+        return entry_type(*res)
+    else:
+        return None
+
+
+def add_entry(entry: Entry) -> bool:
     """
     Insert an entry into the correct DB table. Return True if entry successful
     """
@@ -66,7 +79,7 @@ def add_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
     return True
 
 
-def add_entries(entries: List[Union[Game, Player, Word, Attempt]]) -> bool:
+def add_entries(entries: List[Entry]) -> bool:
     """
     Insert a list of entries into the correct DB table. Commit and return bool if all successful
     """
@@ -83,7 +96,7 @@ def add_entries(entries: List[Union[Game, Player, Word, Attempt]]) -> bool:
     return True
 
 
-def update_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
+def update_entry(entry: Entry) -> bool:
     """
     Update an entry in the database with new values, return whether update was success
     """
@@ -100,7 +113,7 @@ def update_entry(entry: Union[Game, Player, Word, Attempt]) -> bool:
     return True
 
 
-def update_entries(entries: List[Union[Game, Player, Word, Attempt]]) -> bool:
+def update_entries(entries: List[Entry]) -> bool:
     """
     Update a list of entries in the correct DB table. Commit and return bool if all successful
     """
@@ -157,19 +170,23 @@ def reset_words(words: dict) -> dict:
 
 
 def is_valid_game_id(gid) -> bool:
-    return gid in get_games()
+    return True
+    # return gid in get_games()
 
 
 def is_valid_player_id(pid) -> bool:
-    return pid in get_players()
+    return True
+    # return pid in get_players()
 
 
 def is_game_started(gid) -> bool:
-    return get_games().get(gid, {}).get("started", False)
+    return True
+    # return get_games().get(gid, {}).get("started", False)
 
 
 def is_player_captain(pid) -> bool:
-    return get_players().get(pid).get("captain")
+    return True
+    # return get_players().get(pid).get("captain")
 
 
 def create_rand_id(n=10) -> str:

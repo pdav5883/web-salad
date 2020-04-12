@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 
 class Entry:
@@ -32,10 +32,13 @@ class Entry:
 
         return list(attrs.keys()), rep
 
-    def get_annotations(self):
-        attrs = dict(self.__annotations__)
+    @classmethod
+    def get_annotations(cls) -> Dict[str, str]:
+        """
+        Returns a dict where keys are class attributes and values are attribute types
+        """
+        attrs = dict(cls.__annotations__)
         del attrs["table"]
-
         return attrs
 
 

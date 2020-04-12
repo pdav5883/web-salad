@@ -14,28 +14,28 @@ conn.execute("DROP TABLE IF EXISTS game")
 conn.commit()
 
 # dictionaries with key attributes and value typing class
-game_attr = dict(model.Game.__annotations__)
-player_attr = dict(model.Player.__annotations__)
-word_attr = dict(model.Word.__annotations__)
-attempt_attr = dict(model.Attempt.__annotations__)
+game_attr = model.Game.get_annotations()
+player_attr = model.Player.get_annotations()
+word_attr = model.Word.get_annotations()
+attempt_attr = model.Attempt.get_annotations()
 
 
-def map_col_type(typ):
-    if typ == str:
+def map_col_type(col_type):
+    if col_type == str:
         return "TEXT"
-    elif typ == int:
+    elif col_type == int:
         return "INTEGER"
-    elif typ == bool:
+    elif col_type == bool:
         return "INTEGER"
     else:
         return "TEXT"
 
 
 # start building table creation strings
-game_str = "CREATE TABLE game("
-player_str = "CREATE TABLE player("
-word_str = "CREATE TABLE word("
-attempt_str = "CREATE TABLE attempt("
+game_str = f"CREATE TABLE {model.Game.table}("
+player_str = f"CREATE TABLE {model.Player.table}("
+word_str = f"CREATE TABLE {model.Word.table}("
+attempt_str = f"CREATE TABLE {model.Attempt.table}("
 
 # add columns
 for col, typ in game_attr.items():
@@ -51,19 +51,19 @@ for col, typ in attempt_attr.items():
     attempt_str += f"{col} {map_col_type(typ)}, "
 
 # add key constraints
-game_str += "PRIMARY KEY(gid))"
+game_str += "PRIMARY KEY(id))"
 
-player_str += "PRIMARY KEY(pid), " \
-              "FOREIGN KEY(gid) REFERENCES game(gid))"
+player_str += "PRIMARY KEY(id), " \
+              "FOREIGN KEY(gid) REFERENCES game(id))"
 
-word_str += "PRIMARY KEY(wid), " \
-            "FOREIGN KEY(pid) REFERENCES player(pid), " \
-            "FOREIGN KEY(gid) REFERENCES game(gid))"
+word_str += "PRIMARY KEY(id), " \
+            "FOREIGN KEY(pid) REFERENCES player(id), " \
+            "FOREIGN KEY(gid) REFERENCES game(id))"
 
-attempt_str += "PRIMARY KEY(aid), " \
-               "FOREIGN KEY(wid) REFERENCES word(wid), " \
-               "FOREIGN KEY(pid) REFERENCES player(pid), " \
-               "FOREIGN KEY(gid) REFERENCES game(gid))"
+attempt_str += "PRIMARY KEY(id), " \
+               "FOREIGN KEY(wid) REFERENCES word(id), " \
+               "FOREIGN KEY(pid) REFERENCES player(id), " \
+               "FOREIGN KEY(gid) REFERENCES game(id))"
 
 # repopulate tables
 conn.execute(game_str)
