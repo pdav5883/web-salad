@@ -9,31 +9,9 @@ from model import Entry, Game, Player, Word, Attempt
 
 conn = sqlite3.connect("data/salad.db")
 
-gpath = None
-ppath = None
-wpath = None
-
-
-def auth_game(req) -> bool:
-    """
-    Check cookies for game ID
-    """
-    gid = req.cookies.get("gid", None)
-    if gid:
-        return is_valid_game_id(gid)
-    else:
-        return False
-
-
-def auth_player(req) -> bool:
-    """
-    Check cookies for valid player ID
-    """
-    pid = req.cookies.get("pid", None)
-    if pid:
-        return is_valid_player_id(pid)
-    else:
-        return False
+#######################################
+# Generic Database Interaction
+#######################################
 
 
 def entry_exists_by_obj(entry: Entry) -> bool:
@@ -131,6 +109,41 @@ def update_entries(entries: List[Entry]) -> bool:
 
     conn.commit()
     return True
+
+
+#######################################
+# Back-End Methods
+#######################################
+
+
+def auth_game(req) -> bool:
+    """
+    Check cookies for game ID
+    """
+    gid = req.cookies.get("gid", None)
+    if gid:
+        return entry_exists_by_id(gid, Game)
+    else:
+        return False
+
+
+def auth_player(req) -> bool:
+    """
+    Check cookies for valid player ID
+    """
+    pid = req.cookies.get("pid", None)
+    if pid:
+        return entry_exists_by_id(pid, Player)
+    else:
+        return False
+
+
+def get_players_by_game_id(gid: str) -> List[Player]:
+    """
+    Get all the players in this game
+    """
+    query = f"SELECT * FROM player WHERE gid = '{gid}'"
+    return [Player(*res) for res in conn.execute(query).fetchall()]
 
 
 def get_words_remaining(gid: str) -> List[Word]:

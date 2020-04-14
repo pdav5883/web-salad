@@ -51,8 +51,9 @@ class Game(Entry):
     r3_sec: int                     # Seconds per turn in Round 3
     started: bool = False           # Whether this game has started the first round
     complete: bool = False          # Whether this game is finished
-    captain_pid: str = None         # The player ID of the captain
-    queue: List[List[str]] = None   # The queue structure for turns
+    queue: str = None               # The queue structure for turns TODO may need to make this string
+
+
     score_a: int = 0                # The score for team a
     score_b: int = 0                # The score for team b
     round: int = None               # What round is active: 1, 2, 3
@@ -65,6 +66,7 @@ class Player(Entry):
     id: str             # PK
     gid: str            # FK: What game is the player in?
     name: str           # What is the name of the player?
+    captain: bool       # Whether this player is the captain
     team: str = None    # What team is the player on?  "a" or "b"
     table: str = "player"
 

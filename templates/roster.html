@@ -21,7 +21,7 @@
 {% if captain %}
 <p>You are the captain...you decide when to start!</p>
 {% else %}
-<p> You are not the captain...wait for the captain to start!</p>
+<p> {{ captain_name }} is the captain!</p>
 {% endif %}
 
 <button id="beep_button" type="button">Beep!</button>
