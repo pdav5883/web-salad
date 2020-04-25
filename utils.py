@@ -8,7 +8,7 @@ import ast
 
 from model import Entry, Game, Player, Word, Attempt
 
-conn = sqlite3.connect("data/salad.db")
+conn = sqlite3.connect("data/salad.db", check_same_thread=False)
 
 #######################################
 # Generic Database Interaction
@@ -147,6 +147,21 @@ def get_players_by_game_id(gid: str) -> List[Player]:
     return [Player(*res) for res in conn.execute(query).fetchall()]
 
 
+def get_captain_by_game_id(gid: str) -> Player:
+    """
+    The captain of the game
+    """
+    query = f"SELECT player.* FROM player " \
+        f"INNER JOIN game ON game.id = player.gid " \
+        f"WHERE game.id = '{gid}' AND player.id = game.captain_id"
+    res = conn.execute(query).fetchone()
+
+    if res:
+        return Player(*res)
+    else:
+        return None
+
+
 def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
     """
     Return player names by team
@@ -165,12 +180,13 @@ def get_words_remaining(gid: str) -> List[Word]:
     Get a list of Words that have not yet been used in the current round
     """
     query = f"SELECT word.* FROM word " \
-        f"WHERE word.gid = {gid} " \
+        f"WHERE word.gid = '{gid}' " \
         f"AND NOT EXISTS " \
-        f"(SELECT 1 FROM attempt INNER JOIN game " \
-        f"WHERE word.id = attempt.wid " \
+        f"(SELECT 1 FROM attempt " \
+        f"INNER JOIN game ON game.id = attempt.gid " \
+        f"WHERE attempt.wid = word.id " \
         f"AND game.round = attempt.round " \
-        f"AND attempt.point = 1);"
+        f"AND attempt.success IS NOT NULL);"
 
     words = list()
     for word_args in conn.execute(query):
@@ -197,15 +213,15 @@ def get_point_attempts_by_team_by_game_id(gid: str) -> Tuple[List[Attempt], List
     Organize attempts that resulted in a point by team. Team A is first, Team B is second
     """
     query_a = f"SELECT attempt.* FROM attempt " \
+        f"INNER JOIN player ON player.id = attempt.pid " \
         f"WHERE attempt.gid = '{gid}' " \
-        f"AND attempt.point = 1 " \
-        f"AND player.team = 'a' " \
-        f"INNER JOIN player"
+        f"AND attempt.success IS NOT NULL " \
+        f"AND player.team = 'a'"
     query_b = f"SELECT attempt.* FROM attempt " \
+        f"INNER JOIN player ON player.id = attempt.pid " \
         f"WHERE attempt.gid = '{gid}' " \
-        f"AND attempt.point = 1 " \
-        f"AND player.team = 'b' " \
-        f"INNER JOIN player"
+        f"AND attempt.success IS NOT NULL " \
+        f"AND player.team = 'b'"
 
     attempts_a = list()
     for attempt_args in conn.execute(query_a):
@@ -241,6 +257,40 @@ def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
     return score_a, score_b
 
 
+def get_game_stats(gid: str) -> Tuple[str, int, str, int, str, int]:
+    """
+    Gets end of game statistics from attempts data
+    """
+    query_mvp = f"SELECT player.name, " \
+                f"(SELECT COUNT(attempt.id) FROM attempt " \
+                f"WHERE player.id = attempt.pid AND attempt.success = 1 " \
+                f"GROUP BY attempt.pid), " \
+                f"(SELECT COUNT(attempt.id) FROM attempt " \
+                f"WHERE player.id = attempt.pid AND attempt.success = 0 " \
+                f"GROUP BY attempt.pid) " \
+                f"FROM player WHERE player.gid = '{gid}'"
+    data_mvp = conn.execute(query_mvp).fetchall()
+    data_mvp.sort(key=lambda x: x[1] - x[2], reverse=True)
+
+    mvp_name = data_mvp[0][0]
+    mvp_points = data_mvp[0][1] - data_mvp[0][2]
+
+    query_words = f"SELECT word.word, SUM(attempt.seconds) " \
+                  f"FROM word " \
+                  f"INNER JOIN attempt ON word.id = attempt.wid " \
+                  f"WHERE word.gid = '{gid}' " \
+                  f"GROUP BY word.word"
+    data_words = conn.execute(query_words).fetchall()
+    data_words.sort(key=lambda x: x[1], reverse=True)
+
+    hardest_word = data_words[0][0]
+    hardest_time = data_words[0][1]
+    easiest_word = data_words[-1][0]
+    easiest_time = data_words[-1][1]
+
+    return mvp_name, mvp_points, hardest_word, hardest_time, easiest_word, easiest_time
+
+
 def create_rand_id(n=10) -> str:
     chars = string.ascii_uppercase
     return "".join(random.choice(chars) for _ in range(n))
@@ -255,12 +305,10 @@ def bump_player_queue(queue: str) -> Tuple[str, str, str]:
 
     Return the current player, next player, and new queue
     """
-    q = ast.literal_eval(queue)
-
+    q = copy.deepcopy(queue)
     current_team = q.pop(0)
     current_player = current_team.pop(0)
     current_team.append(current_player)
     q.append(current_team)
-    next_player = q[0][0]
 
-    return current_player, next_player, str(q)
+    return q

@@ -73,3 +73,6 @@ conn.execute(attempt_str)
 conn.commit()
 
 conn.close()
+
+from utils import *
+add_entry(Game("a",5,3,3,3))

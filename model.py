@@ -54,6 +54,7 @@ class Game(Entry):
     r3_sec: int                     # Seconds per turn in Round 3
     started: bool = False           # Whether this game has started the first round
     complete: bool = False          # Whether this game is finished
+    captain_id: str = None
     queue: List[List[str]] = None   # The queue structure for turns
     round: int = None               # What round is active: 1, 2, 3
     time_remaining: int = None      # The number of seconds remaining in the last turn
@@ -72,7 +73,6 @@ class Player(Entry):
     id: str             # PK
     gid: str            # FK: What game is the player in?
     name: str           # What is the name of the player?
-    captain: bool       # Whether this player is the captain
     team: str = None    # What team is the player on?  "a" or "b"
     table: str = "player"
 
@@ -93,8 +93,7 @@ class Attempt(Entry):
     pid: str        # FK: What player was giving the clue?
     gid: str        # FK: What game did the attempt occur in?
     round: int      # What round did this attempt occur in?
-    point: bool     # Did someone get a point?
-    success: bool   # Did the team guessing get the point?
+    success: bool   # Did the team guessing get the point? None if no point
     seconds: int    # How long did the attempt last?
     table: str = "attempt"
 

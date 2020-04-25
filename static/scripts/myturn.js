@@ -11,11 +11,13 @@ let timer
 let next_word = words.pop()
 let next_wid = wids.pop()
 
-let correct_words = []
-let correct_wids = []
-let miss_words = []
-let miss_wids = []
+let attempt_words = []
+let attempt_wids = []
+let attempt_correct = [] // true if correct, false if miss, null if no answer
+let attempt_durs = [] // the counter value when this attempt ends
+
 let counter = counter_start
+let attempt_start = counter
 
 yes_button.style.visibility = "hidden"
 no_button.style.visibility = "hidden"
@@ -48,12 +50,14 @@ function stop_turn() {
         ul.appendChild(li)
     }
 
-    for(let i=0; i < correct_words.length; i++){
-        addItem("correct_list", correct_words[i])
-    }
+    for(let i=0; i < attempt_words.length; i++){
+        if(attempt_correct[i] == true) {
+            addItem("correct_list", attempt_words[i])
+        }
+        else if(attempt_correct[i] == false) {
+            addItem("miss_list", attempt_words[i])
+        }
 
-    for(let i=0; i < miss_words.length; i++){
-        addItem("miss_list", miss_words[i])
     }
 
     correct_heading.style.visibility = "visible"
@@ -75,12 +79,16 @@ function submit_turn() {
         form.appendChild(hiddenField);
     };
 
-    for(let i=0; i < correct_wids.length; i++){
-        addField("correct_wids", correct_wids[i])
+    for(let i=0; i < attempt_wids.length; i++){
+        addField("attempt_wids", attempt_wids[i])
     }
 
-    for(let i=0; i < miss_wids.length; i++){
-        addField("miss_wids", miss_wids[i])
+    for(let i=0; i < attempt_correct.length; i++){
+        addField("attempt_correct", attempt_correct[i])
+    }
+
+    for(let i=0; i < attempt_durs.length; i++){
+        addField("attempt_durs", attempt_durs[i])
     }
 
     addField("time_remaining", counter)
@@ -90,13 +98,17 @@ function submit_turn() {
 }
 
 function correct() {
-    correct_words.push(next_word)
-    correct_wids.push(next_wid)
+    attempt_words.push(next_word)
+    attempt_wids.push(next_wid)
+    attempt_correct.push(true)
+    attempt_durs.push(attempt_start - counter)
 }
 
 function miss() {
-    miss_words.push(next_word)
-    miss_wids.push(next_wid)
+    attempt_words.push(next_word)
+    attempt_wids.push(next_wid)
+    attempt_correct.push(false)
+    attempt_durs.push(attempt_start - counter)
 }
 
 function next() {
@@ -106,6 +118,7 @@ function next() {
     else {
         next_word = words.pop()
         next_wid = wids.pop()
+        attempt_start = counter
         current_word.textContent = next_word
     }
 
@@ -136,8 +149,12 @@ function cycle_timer() {
     counter--
     time_remaining.textContent = counter
 
-    if (counter == 0) { // or no words remaining
+    if (counter == 0) { // or no time remaining
         beep(500, 300, 0.5, "triangle")
+        attempt_words.push(next_word)
+        attempt_wids.push(next_wid)
+        attempt_correct.push(null)
+        attempt_durs.push(attempt_start - counter)
         stop_turn()
     } else if (counter == 5) { // beep for five second warning
         beep(100, 500, 0.5, "sine")

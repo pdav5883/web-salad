@@ -30,9 +30,9 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 ## WIP
 - See when players have submitted words on roster (can't start game without)
 - Way to constrain teams so pairs are separated
-- Auth and error handling on all pages
 - Noise still broken for IOS even though test page works
 - Add statistics at gameover screen (MVP, hardest word, easiest word, total game length)
 - If there is time remaining between rounds and next round is shorter time, use diff or ratio
-- Data model
 - Styling framework
+- Consider cache for num words remaining, score, end of game stats, etc
+- Include message with "bad" page

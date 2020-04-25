@@ -77,19 +77,17 @@ def submit_player():
     if not pname:
         return redirect(url_for("submit_player"))
 
-    new_pid = create_rand_id()
-
-    # if this is the first player, assign them captain
-    if len(get_players_by_game_id(gid)) == 0:
-        game = get_entry_by_id(gid, Game)
-        game.captain_name = pname
-        update_entry(game)
-
-    player = Player(new_pid, gid, pname)
+    player = Player(create_rand_id(), gid, pname)
     add_entry(player)
 
+    # if this is the first player, assign them captain
+    game = get_entry_by_id(gid, Game)
+    if game.captain_id is None:
+        game.captain_id = player.id
+        update_entry(game)
+
     resp = make_response(redirect(url_for("new_words")))
-    resp.set_cookie("pid", new_pid)
+    resp.set_cookie("pid", player.id)
     return resp
 
 
@@ -127,12 +125,12 @@ def wait_for_players():
     pid = request.cookies.get("pid")
 
     players = get_players_by_game_id(gid)
-    player_captain = [player for player in players if player.captain].pop()
+    captain = get_captain_by_game_id(gid)
 
     player_names = [player.name for player in players]
-    captain_name = player_captain.name
+    captain_name = captain.name
 
-    is_captain = (pid == player_captain.id)
+    is_captain = (pid == captain.id)
 
     return render_template("roster.html", names=player_names, captain=is_captain, captain_name=captain_name)
 
@@ -151,7 +149,7 @@ def prepare_game():
     if game.started:
         return redirect(url_for("scoreboard"))
 
-    if not this_player.captain:
+    if game.captain_id != this_player.id:
         return redirect(url_for("wait_for_players"))
 
     # assign teams
@@ -170,7 +168,6 @@ def prepare_game():
     game.started = True
     game.queue = [teams_id["b"], teams_id["a"]]
     game.round = 1
-    game["num_remaining"] = len(get_words_remaining(gid))
     game.time_remaining = game.r1_sec
 
     update_entry(game)
@@ -201,8 +198,10 @@ def scoreboard():
     team_a, team_b = get_teams_by_game_id(gid)
     score_a, score_b = get_scores_by_game_id(gid)
 
+    num_words_remaining = len(get_words_remaining(gid))
+
     return render_template("scoreboard.html",
-                           round=game["round"],
+                           round=game.round,
                            curr_name=curr_player.name,
                            next_name=next_player.name,
                            my_turn=my_turn,
@@ -210,7 +209,7 @@ def scoreboard():
                            score_b=score_b,
                            names_a=team_a,
                            names_b=team_b,
-                           words_remaining=game["num_remaining"])
+                           words_remaining=num_words_remaining)
 
 
 @app.route("/myturn/")
@@ -255,67 +254,71 @@ def submit_turn():
     if pid != game.queue[0][0]:
         return redirect(url_for("scoreboard"))
 
-    correct_wids = request.form.getlist("correct_wids")
-    miss_wids = request.form.getlist("miss_wids")
-    time_remaining = request.form.get("time_remaining")
+    # retrieve from JS generated html form, must convert correct and durs since they come in as str
+    attempt_wids = request.form.getlist("attempt_wids")
+    attempt_correct = [json.loads(att_str) for att_str in request.form.getlist("attempt_correct")]
+    attempt_durs = [int(att_str) for att_str in request.form.getlist("attempt_durs")]
+    time_remaining = int(request.form.get("time_remaining"))
 
-    games = get_games()
-    game = games[request.cookies.get("gid")]
-    player = get_player(request.cookies.get("pid"))
-    active_team = player["team"]
-    inactive_team = "a" if active_team == "b" else "b"
-    words = get_words()
+    attempts = [Attempt(create_rand_id(), wid, pid, gid, game.round, success, seconds)
+                for wid, success, seconds in zip(attempt_wids, attempt_correct, attempt_durs)]
+    add_entries(attempts)
 
-    game[f"score_{active_team}"] += len(correct_wids)
-    game[f"score_{inactive_team}"] += len(miss_wids)
-
-    for wid in correct_wids + miss_wids:
-        words[wid]["used"] = True
-
-    if int(time_remaining) > 0:
+    if time_remaining > 0:
         # the game is over!
-        if game["round"] == 3:
-            game["complete"] = True
+        if game.round == 3:
+            game.complete = True
             game.queue = [[None], [None]]
 
         # move to the next round, same person's turn with the balance of their time
         else:
-            game["round"] += 1
-            words = reset_words(words)
-            game["time_remaining"] = time_remaining
-            game["num_remaining"] = len(words)
+            game.round += 1
+            game.time_remaining = time_remaining
 
     else:
-        game["curr_id"], game["next_id"], game["queue"] = bump_player_queue(game["queue"])
-        game["time_remaining"] = game[f"t{game['round']}"]
-        game["num_remaining"] -= len(correct_wids + miss_wids)
+        game.time_remaining = game.__getattribute__(f"r{game.round}_sec")
+        game.queue = bump_player_queue(game.queue)
 
-    update_games(games)
-    update_words(words)
+    update_entry(game)
 
     return redirect(url_for("scoreboard"))
 
 
 @app.route("/gameover")
 def game_over():
-    game = get_game(request.cookies.get("gid"))
+    if not auth_player(request):
+        return redirect(url_for("bad"))
 
-    if game["score_a"] > game["score_b"]:
+    gid = request.cookies.get("gid")
+    game: Game = get_entry_by_id(gid, Game)
+
+    if not game.complete:
+        return redirect(url_for("bad"))
+
+    score_a, score_b = get_scores_by_game_id(gid)
+    names_a, names_b = get_teams_by_game_id(gid)
+
+    if score_a > score_b:
         winner_str = "Congratulations Team A!"
-        game["winner"] = "a"
-    elif game["score_a"] < game["score_b"]:
+    elif score_a < score_b:
         winner_str = "Congratulations Team B!"
-        game["winner"] = "b"
     else:
         winner_str = "Woah, a tie!!"
-        game["winner"] = None
+
+    mvp_name, mvp_points, hardest_word, hardest_time, easiest_word, easiest_time = get_game_stats(gid)
 
     return render_template("gameover.html",
                            winner_str=winner_str,
-                           score_a=game["score_a"],
-                           score_b=game["score_b"],
-                           names_a=game["team_a"],
-                           names_b=game["team_b"]
+                           score_a=score_a,
+                           score_b=score_b,
+                           names_a=names_a,
+                           names_b=names_b,
+                           mvp_name=mvp_name,
+                           mvp_points=mvp_points,
+                           hardest_word=hardest_word,
+                           hardest_time=hardest_time,
+                           easiest_word=easiest_word,
+                           easiest_time=easiest_time
                            )
 
 
