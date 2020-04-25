@@ -1,9 +1,10 @@
 import string
 import random
 import json
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 import copy
 import sqlite3
+import ast
 
 from model import Entry, Game, Player, Word, Attempt
 
@@ -146,11 +147,30 @@ def get_players_by_game_id(gid: str) -> List[Player]:
     return [Player(*res) for res in conn.execute(query).fetchall()]
 
 
+def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
+    """
+    Return player names by team
+    """
+    players = get_players_by_game_id(gid)
+    teams = {"a": list(), "b": list()}
+
+    for player in players:
+        teams[player.team].append(player.name)
+
+    return teams["a"], teams["b"]
+
+
 def get_words_remaining(gid: str) -> List[Word]:
     """
     Get a list of Words that have not yet been used in the current round
     """
-    query = f"SELECT * FROM word WHERE gid = '{gid}' AND used = 0"
+    query = f"SELECT word.* FROM word " \
+        f"WHERE word.gid = {gid} " \
+        f"AND NOT EXISTS " \
+        f"(SELECT 1 FROM attempt INNER JOIN game " \
+        f"WHERE word.id = attempt.wid " \
+        f"AND game.round = attempt.round " \
+        f"AND attempt.point = 1);"
 
     words = list()
     for word_args in conn.execute(query):
@@ -159,47 +179,66 @@ def get_words_remaining(gid: str) -> List[Word]:
     return words
 
 
+def get_attempts_by_game_id(gid: str) -> List[Attempt]:
+    """
+    All the attempts that have happened in this game
+    """
+    query = f"SELECT * FROM attempt WHERE gid = '{gid}'"
+
+    attempts = list()
+    for attempt_args in conn.execute(query):
+        attempts.append(Attempt(*attempt_args))
+
+    return attempts
 
 
-def update_games(games: dict):
-    with open(gpath, "w") as fptr:
-        json.dump(games, fptr)
+def get_point_attempts_by_team_by_game_id(gid: str) -> Tuple[List[Attempt], List[Attempt]]:
+    """
+    Organize attempts that resulted in a point by team. Team A is first, Team B is second
+    """
+    query_a = f"SELECT attempt.* FROM attempt " \
+        f"WHERE attempt.gid = '{gid}' " \
+        f"AND attempt.point = 1 " \
+        f"AND player.team = 'a' " \
+        f"INNER JOIN player"
+    query_b = f"SELECT attempt.* FROM attempt " \
+        f"WHERE attempt.gid = '{gid}' " \
+        f"AND attempt.point = 1 " \
+        f"AND player.team = 'b' " \
+        f"INNER JOIN player"
+
+    attempts_a = list()
+    for attempt_args in conn.execute(query_a):
+        attempts_a.append(Attempt(*attempt_args))
+
+    attempts_b = list()
+    for attempt_args in conn.execute(query_b):
+        attempts_b.append(Attempt(*attempt_args))
+
+    return attempts_a, attempts_b
 
 
-def update_players(players: dict):
-    with open(ppath, "w") as fptr:
-        json.dump(players, fptr)
+def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
+    """
+    Return total scores for team A and team B
+    """
+    attempts_a, attempts_b = get_point_attempts_by_team_by_game_id(gid)
 
+    score_a = score_b = 0
 
-def update_words(words: dict):
-    with open(wpath, "w") as fptr:
-        json.dump(words, fptr)
+    for attempt in attempts_a:
+        if attempt.success:
+            score_a += 1
+        else:
+            score_b += 1
 
+    for attempt in attempts_b:
+        if attempt.success:
+            score_b += 1
+        else:
+            score_a += 1
 
-def reset_words(words: dict) -> dict:
-    for wdata in words.values():
-        wdata["used"] = False
-    return words
-
-
-def is_valid_game_id(gid) -> bool:
-    return True
-    # return gid in get_games()
-
-
-def is_valid_player_id(pid) -> bool:
-    return True
-    # return pid in get_players()
-
-
-def is_game_started(gid) -> bool:
-    return True
-    # return get_games().get(gid, {}).get("started", False)
-
-
-def is_player_captain(pid) -> bool:
-    return True
-    # return get_players().get(pid).get("captain")
+    return score_a, score_b
 
 
 def create_rand_id(n=10) -> str:
@@ -207,12 +246,16 @@ def create_rand_id(n=10) -> str:
     return "".join(random.choice(chars) for _ in range(n))
 
 
-def bump_player_queue(queue: List[List[str]]) -> Tuple[str, str, List[List[str]]]:
+def bump_player_queue(queue: str) -> Tuple[str, str, str]:
     """
     Increment the player queue.
+
+    Queue is input/output as a string rep of a List[List[str]] of player ids. Must be in string format for SQLite
+    storage.
+
     Return the current player, next player, and new queue
     """
-    q = copy.deepcopy(queue)
+    q = ast.literal_eval(queue)
 
     current_team = q.pop(0)
     current_player = current_team.pop(0)
@@ -220,4 +263,4 @@ def bump_player_queue(queue: List[List[str]]) -> Tuple[str, str, List[List[str]]
     q.append(current_team)
     next_player = q[0][0]
 
-    return current_player, next_player, q
+    return current_player, next_player, str(q)

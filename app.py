@@ -168,56 +168,73 @@ def prepare_game():
 
     # set up the game
     game.started = True
-    queue = bump_player_queue([teams_id["a"], teams_id["b"]])
-    game.queue = queue
-    game["team_a"] = teams_name["a"]
-    game["team_b"] = teams_name["b"]
-    game.score_a = 0
-    game.score_b = 0
+    game.queue = [teams_id["b"], teams_id["a"]]
     game.round = 1
-    game["num_remaining"] = len(get_words_remaining())
+    game["num_remaining"] = len(get_words_remaining(gid))
     game.time_remaining = game.r1_sec
 
-    update_games(games)
-    update_players(players)
+    update_entry(game)
+    update_entries(players)
 
     return redirect(url_for("scoreboard"))
 
 
 @app.route("/scoreboard/")
 def scoreboard():
-    game = get_game(request.cookies.get("gid"))
+    if not auth_player(request):
+        return redirect(url_for("bad"))
 
-    if game["complete"]:
+    gid = request.cookies.get("gid")
+    pid = request.cookies.get("pid")
+    game: Game = get_entry_by_id(gid, Game)
+
+    if game.complete:
         return redirect(url_for("game_over"))
 
-    curr_name = get_player_name(game["curr_id"])
-    next_name = get_player_name(game["next_id"])
-    my_turn = (request.cookies.get("pid") == game["curr_id"])
+    curr_id = game.queue[0][0]
+    next_id = game.queue[1][0]
+
+    curr_player = get_entry_by_id(curr_id, Player)
+    next_player = get_entry_by_id(next_id, Player)
+    my_turn = (pid == curr_player.id)
+
+    team_a, team_b = get_teams_by_game_id(gid)
+    score_a, score_b = get_scores_by_game_id(gid)
 
     return render_template("scoreboard.html",
                            round=game["round"],
-                           curr_name=curr_name,
-                           next_name=next_name,
+                           curr_name=curr_player.name,
+                           next_name=next_player.name,
                            my_turn=my_turn,
-                           score_a=game["score_a"],
-                           score_b=game["score_b"],
-                           names_a=game["team_a"],
-                           names_b=game["team_b"],
+                           score_a=score_a,
+                           score_b=score_b,
+                           names_a=team_a,
+                           names_b=team_b,
                            words_remaining=game["num_remaining"])
 
 
 @app.route("/myturn/")
 def my_turn():
-    # TODO: need some sort of check so that you can only get here when it's your turn hasn't started yet
-    word_pairs = get_words_remaining()
-    shuffle(word_pairs)
-    wids, words = map(list, zip(*word_pairs))
-    time_remaining = get_time_remaining(request.cookies.get("gid")
-                                        )
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    gid = request.cookies.get("gid")
+    pid = request.cookies.get("pid")
+    game: Game = get_entry_by_id(gid, Game)
+
+    # make sure pid matches current turn
+    if pid != game.queue[0][0]:
+        return redirect(url_for("scoreboard"))
+
+    words = get_words_remaining(gid)
+    shuffle(words)
+    wids = [word.id for word in words]
+    word_strs = [word.word for word in words]
+    time_remaining = game.time_remaining
+
     return render_template("myturn.html",
                            wids=json.dumps(wids),
-                           words=json.dumps(words),
+                           words=json.dumps(word_strs),
                            time_remaining=time_remaining)
 
 
@@ -227,6 +244,17 @@ def submit_turn():
     # update the game
     # did we just end a round, then go to /endround and set time remaining
     # if not then bump the queue, set time and go to /scoreboard
+    if not auth_player(request):
+        return redirect(url_for("bad"))
+
+    gid = request.cookies.get("gid")
+    pid = request.cookies.get("pid")
+    game: Game = get_entry_by_id(gid, Game)
+
+    # make sure pid matches current turn
+    if pid != game.queue[0][0]:
+        return redirect(url_for("scoreboard"))
+
     correct_wids = request.form.getlist("correct_wids")
     miss_wids = request.form.getlist("miss_wids")
     time_remaining = request.form.get("time_remaining")
@@ -248,6 +276,7 @@ def submit_turn():
         # the game is over!
         if game["round"] == 3:
             game["complete"] = True
+            game.queue = [[None], [None]]
 
         # move to the next round, same person's turn with the balance of their time
         else:

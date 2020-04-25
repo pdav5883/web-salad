@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import ast
+import json
 from typing import List, Tuple, Dict
 
 
@@ -28,7 +30,8 @@ class Entry:
             elif typ == bool:
                 rep.append(f"{int(val)}")
             else:
-                rep.append(f"'{val}'")
+                list_str = str(val).replace("'", "\"")
+                rep.append(f"'{list_str}'")
 
         return list(attrs.keys()), rep
 
@@ -51,14 +54,17 @@ class Game(Entry):
     r3_sec: int                     # Seconds per turn in Round 3
     started: bool = False           # Whether this game has started the first round
     complete: bool = False          # Whether this game is finished
-    queue: str = None               # The queue structure for turns TODO may need to make this string
-
-
-    score_a: int = 0                # The score for team a
-    score_b: int = 0                # The score for team b
+    queue: List[List[str]] = None   # The queue structure for turns
     round: int = None               # What round is active: 1, 2, 3
     time_remaining: int = None      # The number of seconds remaining in the last turn
     table: str = "game"
+
+    def __post_init__(self):
+        """
+        When init from SQL row, queue is a string
+        """
+        if type(self.queue) == str:
+            self.queue = ast.literal_eval(self.queue)
 
 
 @dataclass
@@ -77,7 +83,6 @@ class Word(Entry):
     pid: str            # FK: What player submitted the word?
     gid: str            # FK: What game is the word in?
     word: str           # The actual word
-    used: bool = False  # Whether the words has been used in the current round
     table: str = "word"
 
 
@@ -88,8 +93,8 @@ class Attempt(Entry):
     pid: str        # FK: What player was giving the clue?
     gid: str        # FK: What game did the attempt occur in?
     round: int      # What round did this attempt occur in?
+    point: bool     # Did someone get a point?
     success: bool   # Did the team guessing get the point?
-    failure: bool   # Did the team guessing give the point to the other team?
     seconds: int    # How long did the attempt last?
     table: str = "attempt"
 
