@@ -30,8 +30,6 @@ def submit_game():
 
     new_game = Game(new_gid, num_words, t1, t2, t3)
 
-    gdata = {"num_words": num_words, "t1": t1, "t2": t2, "t3": t3, "started": False}
-
     if add_entry(new_game):
         return redirect(url_for("home"))
     else:
