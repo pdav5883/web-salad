@@ -1,10 +1,35 @@
-<!doctype html>
-<title>Welcome</title>
-<h1>Welcome to Salad Bowl!</h1>
-<img src="/static/images/bowl.png">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>Welcome</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <section class="header welcome-title">
+      <h1>Welcome to Salad Bowl</h1>
+    </section>
 
-<form action="/joingame">
-  <label for="gid">Enter Your Game ID:</label><br>
-  <input type="text" id="gid" name="gid" value=""><br>
-  <input type="submit" value="Submit">
-</form>
+    <img class="center-image" src="../static/images/bowl.png">
+    <div class="center-block">
+      <form action="/joingame">
+        <input class="u-full-width" type="text" id="gid" name="gid" placeholder="Game ID"><br>
+        <div class="center-text">
+          <input class="button-primary" type="submit" value="Join">
+        </div>
+      </form>
+      </div>
+  </div>
+</body>
+</html>
