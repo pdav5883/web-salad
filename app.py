@@ -61,7 +61,7 @@ def new_player():
     # maybe check to make sure a player doesn't already exist in cookies to stop one user creating multiple players
     if not auth_game(request):
         return redirect(url_for("bad"))
-    return render_template("newplayer.html")
+    return render_template("newplayer.html", gid=request.cookies.get("gid"))
 
 
 @app.route("/submitplayer/")
@@ -97,7 +97,7 @@ def new_words():
     gid = request.cookies.get("gid")
     game = get_entry_by_id(gid, Game)
 
-    return render_template("newwords.html", num_words=game.words_per_player)
+    return render_template("newwords.html", num_words=game.words_per_player, gid=gid)
 
 
 @app.route("/submitwords/")

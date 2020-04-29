@@ -36,3 +36,5 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 - Styling framework
 - Consider cache for num words remaining, score, end of game stats, etc
 - Include message with "bad" page
+- Add game details to admin panel
+- Change all ../static paths to /static

@@ -1,11 +1,40 @@
-<!doctype html>
-<title>New Words</title>
-<h1>Put Your Words in the Bowl</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>New Words</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="game-id-box">
+    <p class="game-id-text">Game: {{ gid }}</p>
+  </div>
 
-<form action="/submitwords">
-  {% for index in range(num_words | int) %}
-  <label for="word{{index}}">Word {{index+1}}:</label><br>
-  <input type="text" id="word{{index}}" name="words[]" value=""><br>
-  {% endfor %}
-  <input type="submit" value="Submit">
-</form>
+  <div class="container">
+    <section class="header">
+      <h2>Put Your Words<br>In The Bowl</h2>
+    </section>
+
+    <div class="center-block">
+      <form action="/submitwords">
+        {% for index in range(num_words | int) %}
+        <input type="text" name="words[]" value=""><br>
+        {% endfor %}
+        <div class="center-text">
+          <input class="button-primary" type="submit" value="Submit">
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,9 +1,39 @@
-<!doctype html>
-<title>New Player</title>
-<h1>What's Your Name?</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>New Player</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="game-id-box">
+    <p class="game-id-text">Game: {{ gid }}</p>
+  </div>
 
-<form action="/submitplayer">
-  <label for="pname">Enter Your Name:</label><br>
-  <input type="text" id="pname" name="pname" value=""><br><br>
-  <input type="submit" value="Submit">
-</form>
+  <div class="container">
+    <section class="header">
+      <h2>Enter Your Name</h2>
+    </section>
+    <div class="center-block">
+      <form action="/submitplayer">
+        <input class="center-text" type="text" id="pname" name="pname" placeholder="McLovin">
+        <div class="center-text">
+          <input class="button-primary" type="submit" value="Submit">
+        </div>
+      </form>
+    </div>
+
+  </div>
+</body>
+</html>
+

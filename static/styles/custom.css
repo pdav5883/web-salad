@@ -18,6 +18,13 @@
   margin: 0 auto; }
 .center-text {
   text-align: center; }
+.game-id-box {
+  position: absolute;
+  top: 5px;
+  right: 5px;}
+.game-id-text {
+  margin: .5rem 1rem;
+  font-size: 2rem; }
 .value-prop {
   margin-top: 1rem; }
 .value-props {
