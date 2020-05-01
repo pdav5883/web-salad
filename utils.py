@@ -258,7 +258,27 @@ def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
 
 
 def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
-    pass
+    """
+        Return total scores for team A and team B as a list by round
+        """
+    attempts_a, attempts_b = get_point_attempts_by_team_by_game_id(gid)
+
+    score_a = 3 * [0]
+    score_b = 3 * [0]
+
+    for attempt in attempts_a:
+        if attempt.success:
+            score_a[attempt.round - 1] += 1
+        else:
+            score_b[attempt.round - 1] += 1
+
+    for attempt in attempts_b:
+        if attempt.success:
+            score_b[attempt.round - 1] += 1
+        else:
+            score_a[attempt.round - 1] += 1
+
+    return score_a, score_b
 
 
 def get_game_stats(gid: str) -> Tuple[str, int, str, int, str, int]:

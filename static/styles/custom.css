@@ -51,9 +51,9 @@
 .update-button, .start-turn-button {
   margin-bottom: 1.5rem;
   font-size: 1.7rem; }
-.start-turn-button {
-  background-color: #00E04C !important;
-  border-color: #00E04C !important;
+.button.button-primary.start-turn-button {
+  background-color: #00E04C;
+  border-color: #00E04C;
  }
 
 /* Larger than phone */

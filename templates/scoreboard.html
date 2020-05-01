@@ -54,9 +54,9 @@
       </table>
       <div class="row center-text">
         {% if myturn %}
-        <a href="/myturn/" class="start-turn-button button button-primary ">Start Turn!</a>
+        <a href="/myturn/" class="button button-primary start-turn-button">Start Turn!</a>
         {% else %}
-        <a href="/scoreboard/" class="update-button button button-primary">Update</a>
+        <a href="/scoreboard/" class="button button-primary update-button">Update</a>
         {% endif %}
       </div>
       <div class="row center-text large-text">Words Remaining: {{ status.num_words }}</div>

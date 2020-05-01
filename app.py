@@ -193,8 +193,8 @@ def scoreboard():
     next_player = get_entry_by_id(next_id, Player)
     num_words_remaining = len(get_words_remaining(gid))
     status = {"round": game.round,
-              "curr_player": curr_player,
-              "next_player": next_player,
+              "curr_player": curr_player.name,
+              "next_player": next_player.name,
               "num_words": num_words_remaining}
 
     team_a, team_b = get_teams_by_game_id(gid)
