@@ -257,6 +257,10 @@ def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
     return score_a, score_b
 
 
+def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
+    pass
+
+
 def get_game_stats(gid: str) -> Tuple[str, int, str, int, str, int]:
     """
     Gets end of game statistics from attempts data

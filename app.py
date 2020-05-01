@@ -191,23 +191,35 @@ def scoreboard():
 
     curr_player = get_entry_by_id(curr_id, Player)
     next_player = get_entry_by_id(next_id, Player)
-    my_turn = (pid == curr_player.id)
+    num_words_remaining = len(get_words_remaining(gid))
+    status = {"round": game.round,
+              "curr_player": curr_player,
+              "next_player": next_player,
+              "num_words": num_words_remaining}
 
     team_a, team_b = get_teams_by_game_id(gid)
-    score_a, score_b = get_scores_by_game_id(gid)
+    if len(team_a) > len(team_b):
+        team_b.append("")
+    teams = list(zip(team_a, team_b))
 
-    num_words_remaining = len(get_words_remaining(gid))
+    scores_a, scores_b = get_scores_by_round_by_game_id(gid)
+    scores = {"r1a": scores_a[0] or "-",
+              "r1b": scores_b[0] or "-",
+              "r2a": scores_a[1] or "-",
+              "r2b": scores_b[1] or "-",
+              "r3a": scores_a[2] or "-",
+              "r3b": scores_b[2] or "-",
+              "totala": sum(scores_a),
+              "totalb": sum(scores_b)}
+
+    myturn = (pid == curr_player.id)
 
     return render_template("scoreboard.html",
-                           round=game.round,
-                           curr_name=curr_player.name,
-                           next_name=next_player.name,
-                           my_turn=my_turn,
-                           score_a=score_a,
-                           score_b=score_b,
-                           names_a=team_a,
-                           names_b=team_b,
-                           words_remaining=num_words_remaining)
+                           gid=gid,
+                           myturn=myturn,
+                           status=status,
+                           scores=scores,
+                           teams=teams)
 
 
 @app.route("/myturn/")
@@ -329,15 +341,35 @@ def bad():
 def good():
     return "Good job :)"
 
-@app.route("/test/")
+@app.route("/test-scoreboard/")
 def test():
-    word_pairs = get_words_remaining()
-    shuffle(word_pairs)
-    wids, words = map(list, zip(*word_pairs))
-    return render_template("myturn.html",
-                           wids=json.dumps(wids),
-                           words=json.dumps(words),
-                           time_remaining=10)
+    gid = "Applesauce"
+    teams = [("Peter", "Kelly"),
+             ("Matt", "Molly"),
+             ("Juan", "Emily"),
+             ("Gio", "Miz")]
+
+    scores = {"r1a": 3 or "-",
+              "r1b": 7 or "-",
+              "r2a": 4 or "-",
+              "r2b": 2 or "-",
+              "r3a": 0 or "-",
+              "r3b": 0 or "-",
+              "totala": 7,
+              "totalb": 9}
+
+    status = {"round": 2,
+              "curr_player": "Miz",
+              "next_player": "Gio",
+              "num_words": 4}
+    myturn = False
+
+    return render_template("scoreboard.html",
+                           gid=gid,
+                           myturn=myturn,
+                           status=status,
+                           scores=scores,
+                           teams=teams)
 
 
 if __name__ == "__main__":

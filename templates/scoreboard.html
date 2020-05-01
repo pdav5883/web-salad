@@ -1,32 +1,85 @@
-<!doctype html>
-<title>Scoreboard</title>
-<h1>Game Scoreboard</h1>
-<h2> Round {{ round }}</h2>
-{% if my_turn %}
-<form action="/myturn/">
-    <input type="submit" value="Start Your Turn!" />
-</form>
-{% else %}
-<p>It's not your turn yet...</p>
-<form action="/scoreboard/">
-    <input type="submit" value="Update" />
-</form>
-{% endif %}
-<h3>Up Now: {{ curr_name }}</h3>
-<h3>Up Next: {{ next_name }}</h3>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>Scoreboard</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="game-id-box">
+    <p class="game-id-text">Game: {{ gid }}</p>
+  </div>
 
-<h3> Team A: {{ score_a }}</h3>
-<ul>
-{% for name in names_a %}
-    <li>{{ name }}</li>
-{% endfor %}
-</ul>
+  <div class="container">
+    <section class="header score-header">
+      <h1>Scoreboard</h1>
+        <h3>Round {{ status.round }}</h3>
+    </section>
+    <div class="score-width">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Team A</td>
+            <td>{{ scores.r1a }}</td>
+            <td>{{ scores.r2a }}</td>
+            <td>{{ scores.r3a }}</td>
+            <td>{{ scores.totala }}</td>
+          </tr>
+          <tr>
+            <td>Team B</td>
+            <td>{{ scores.r1b }}</td>
+            <td>{{ scores.r2b }}</td>
+            <td>{{ scores.r3b }}</td>
+            <td>{{ scores.totalb }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="row center-text">
+        {% if myturn %}
+        <a href="/myturn/" class="start-turn-button button button-primary ">Start Turn!</a>
+        {% else %}
+        <a href="/scoreboard/" class="update-button button button-primary">Update</a>
+        {% endif %}
+      </div>
+      <div class="row center-text large-text">Words Remaining: {{ status.num_words }}</div>
+      <div class="row center-text large-text">Up Now: {{ status.curr_player }}</div>
+      <div class="row center-text large-text">Up Next: {{ status.next_player }}</div>
 
-<h3> Team B: {{ score_b }}</h3>
-<ul>
-{% for name in names_b %}
-    <li>{{ name }}</li>
-{% endfor %}
-</ul>
-
-<h4>Words remaining in round: {{ words_remaining }}</h4>
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>Team A</th>
+            <th>Team B</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name_a, name_b in teams %}
+          <tr>
+            <td>{{ name_a }}</td>
+            <td>{{ name_b }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
