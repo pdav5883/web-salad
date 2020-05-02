@@ -3,7 +3,6 @@ from itertools import cycle
 
 from flask import Flask, render_template, url_for, redirect, request, make_response
 
-from model import Game, Player, Word, Attempt
 from utils import *
 
 app = Flask(__name__)

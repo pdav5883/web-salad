@@ -1,17 +1,43 @@
-<!doctype html>
-<title>Admin</title>
-<h1>Admin Page</h1>
-
-<form action="/submitgame">
-  <label for="new_gid">Enter New Game ID:</label><br>
-  <input type="text" id="new_gid" name="new_gid" value=""><br><br>
-  <label for="num_words">Words Per Person:</label><br>
-  <input type="number" id="num_words" name="num_words" value="5"><br><br>
-  <label for="t1">Round 1 Seconds:</label><br>
-  <input type="number" id="t1" name="t1" value="30"><br><br>
-  <label for="t2">Round 2 Seconds:</label><br>
-  <input type="number" id="t2" name="t2" value="30"><br><br>
-  <label for="t3">Round 3 Seconds:</label><br>
-  <input type="number" id="t3" name="t3" value="30"><br><br>
-  <input type="submit" value="Submit">
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>Admin Page</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <section class="header score-header">
+      <h2>Admin Panel</h2>
+    </section>
+    <form class="center-text" action="/submitgame/">
+      <label class="admin-label" for="new_gid">New Game ID:</label>
+      <input class="" type="text" id="new_gid" name="new_gid" value="">
+      <br>
+      <label class="admin-label" for="num_words">Words Per Person:</label>
+      <input class="admin-input" type="number" id="num_words" name="num_words" value="5">
+      <br>
+      <label class="admin-label" for="t1">Round 1 Seconds:</label>
+      <input class="admin-input" type="number" id="t1" name="t1" value="60">
+      <br>
+      <label class="admin-label" for="t2">Round 2 Seconds:</label>
+      <input class="admin-input" type="number" id="t2" name="t2" value="60">
+      <br>
+      <label class="admin-label" for="t3">Round 3 Seconds:</label>
+      <input class="admin-input" type="number" id="t3" name="t3" value="30">
+      <br>
+      <input class="button-primary" type="submit" value="Create Game">
+    </form>
+  </div>
+</body>
+</html>

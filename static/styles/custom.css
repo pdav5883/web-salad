@@ -81,6 +81,10 @@
 .button.button-primary.waiting-button {
   width: 15rem;
   font-size: 1.6rem; }
+.admin-label {
+  display: inline; }
+.admin-input {
+  width: 10rem; }
 
 /* Larger than phone */
 @media (min-width: 550px) {
