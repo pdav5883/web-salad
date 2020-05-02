@@ -1,29 +1,65 @@
-<!doctype html>
-<title>Roster</title>
-<h1>Game Participants</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>Waiting</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="game-id-box">
+      <p class="game-id-text">Game: {{ gid }}</p>
+  </div>
 
-<ul>
-{% for name in names %}
-    <li>{{ name }}</li>
-{% endfor %}
-</ul>
+  <div class="container">
+    <section class="header score-header">
+        <h2>Waiting for Players</h2>
+    </section>
 
-<p>Waiting for players...</p>
+    <table class="waiting-table">
+      <tbody>
+        {% for name, ready in names_ready %}
+        <tr>
+            <td>{{ name }}</td>
+            {% if ready %}
+            <td>&#10003</td>
+            {% else %}
+            <td>&#8230</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="row double-button">
+      <div class="one-half column center-text">
+        <a href="/roster/" class="button button-primary waiting-button">Update</a><br>
+      </div>
+      <div class="one-half column center-text">
+        <button id="beep_button" class="button button-primary waiting-button">Beep Test</button><br>
+      </div>
+    </div>
+    <div class="row center-text">
+      {% if is_captain %}
+      <div class="row">You are the Captain!</div>
+      <div class="row">
+        <a href="/preparegame/" class="button button-primary start-game-button">Start Game</a>
+      </div>
+      {% else %}
+      <div class="row">Waiting for {{ captain_name }} to start game...</div>
+      {% endif %}
 
-<form action="/preparegame/">
-    {% if captain %}
-    <input type="submit" value="Start Game!" />
-    {% else %}
-    <input type="submit" value="Update" />
-    {% endif %}
-</form>
+    </div>
+  </div>
 
-{% if captain %}
-<p>You are the captain...you decide when to start!</p>
-{% else %}
-<p> {{ captain_name }} is the captain!</p>
-{% endif %}
-
-<button id="beep_button" type="button">Beep!</button>
-
+</body>
 <script type="text/javascript" src="/static/scripts/beeptest.js"></script>
+</html>

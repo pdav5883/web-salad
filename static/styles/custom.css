@@ -18,6 +18,10 @@
   margin: 0 auto; }
 .center-text {
   text-align: center; }
+.left-text {
+  text-align: left; }
+.right-text {
+  text-align: right; }
 .large-text {
   font-size: 2rem}
 .game-id-box {
@@ -27,6 +31,19 @@
 .game-id-text {
   margin: .5rem 1rem;
   font-size: 2rem; }
+.waiting-table {
+  margin-left: auto;
+  margin-right: auto;
+  font-size:2rem;
+  border: none; }
+.waiting-table td {
+  padding: 0.3rem 1.5rem;
+  border: none; }
+.double-button {
+  width: 35rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2rem;}
 .score-width {
   width: 100%; }
 .score-table {
@@ -51,10 +68,19 @@
 .update-button, .start-turn-button {
   margin-bottom: 1.5rem;
   font-size: 1.7rem; }
-.button.button-primary.start-turn-button {
+.button.button-primary.start-game-button {
+  margin-top: 1rem;
+  margin-left: auto;
+  margin-right: auto;
   background-color: #00E04C;
   border-color: #00E04C;
- }
+  font-size: 1.6rem; }
+.button.button-primary.start-turn-button {
+  background-color: #00E04C;
+  border-color: #00E04C; }
+.button.button-primary.waiting-button {
+  width: 15rem;
+  font-size: 1.6rem; }
 
 /* Larger than phone */
 @media (min-width: 550px) {

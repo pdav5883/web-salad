@@ -162,6 +162,21 @@ def get_captain_by_game_id(gid: str) -> Player:
         return None
 
 
+def get_players_ready_by_game_id(gid: str, pids: List[str]) -> List[bool]:
+    """
+    Return a list of whether each player has submitted words
+    """
+    query = f"SELECT DISTINCT pid FROM word WHERE gid = '{gid}'"
+    ready_players = [res[0] for res in conn.execute(query).fetchall()]
+
+    ready = []
+
+    for pid in pids:
+        ready.append(pid in ready_players)
+
+    return ready
+
+
 def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
     """
     Return player names by team

@@ -122,15 +122,23 @@ def wait_for_players():
     gid = request.cookies.get("gid")
     pid = request.cookies.get("pid")
 
+    game: Game = get_entry_by_id(gid, Game)
+    if game.started:
+        return redirect(url_for("scoreboard"))
+
     players = get_players_by_game_id(gid)
     captain = get_captain_by_game_id(gid)
 
-    player_names = [player.name for player in players]
-    captain_name = captain.name
+    player_ids = [player.id for player in players]
 
+    player_names = [player.name for player in players]
+    player_status = get_players_ready_by_game_id(gid, player_ids)
+    names_ready = list(zip(player_names, player_status))
+
+    captain_name = captain.name
     is_captain = (pid == captain.id)
 
-    return render_template("roster.html", names=player_names, captain=is_captain, captain_name=captain_name)
+    return render_template("roster.html", gid=gid, names_ready=names_ready, is_captain=is_captain, captain_name=captain_name)
 
 
 @app.route("/preparegame/")
