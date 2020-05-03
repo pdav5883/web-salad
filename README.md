@@ -29,10 +29,9 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 
 ## WIP
 - V1
-    - Organize style sheet
     - Production server
     - Running in EC2 without active SSH
-    - Add source code link to home
+    - Timer font
 - Future
     - Way to constrain teams so pairs are separated
     - Add game length to end stats
