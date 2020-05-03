@@ -28,15 +28,18 @@ SSH into the EC2 instance and run
 In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IPv4 of the EC2 instance running the server.
 
 ## WIP
-- Way to constrain teams so pairs are separated
-- Add game length to end stats
-- If there is time remaining between rounds and next round is shorter time, use diff or ratio
-- Consider cache for num words remaining, score, end of game stats, etc
-- Include message with "bad" page
-- Add game details to admin panel
-- Delete games from admin panel
-- Change all ../static paths to /static
-- Organize style sheet
-- Production server
-- Running in EC2 without active SSH
-- Razzle dazzle
+- V1
+    - Organize style sheet
+    - Production server
+    - Running in EC2 without active SSH
+    - Add source code link to home
+- Future
+    - Way to constrain teams so pairs are separated
+    - Add game length to end stats
+    - If there is time remaining between rounds and next round is shorter time, use diff or ratio
+    - Consider cache for num words remaining, score, end of game stats, etc
+    - Include message with "bad" page
+    - Add game details to admin panel
+    - Delete games from admin panel
+    - Razzle dazzle
+
