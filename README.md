@@ -40,4 +40,5 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 - Re-styling:
     - My turn
     - Game over
-    - Admin
+- List of last round words
+- Organize style sheet

@@ -249,6 +249,7 @@ def my_turn():
     time_remaining = game.time_remaining
 
     return render_template("myturn.html",
+                           gid=gid,
                            wids=json.dumps(wids),
                            words=json.dumps(word_strs),
                            time_remaining=time_remaining)

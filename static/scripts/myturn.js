@@ -1,10 +1,13 @@
 let start_button = document.getElementById("start_button")
+let start_box = document.getElementById("start_box")
+let submit_button = document.getElementById("submit_button")
+let submit_box = document.getElementById("submit_box")
 let yes_button = document.getElementById("yes_button")
 let no_button = document.getElementById("no_button")
+let yes_no_box = document.getElementById("yes_no_box")
 let current_word = document.getElementById("current_word")
 let time_remaining = document.getElementById("time_remaining")
-let correct_heading = document.getElementById("correct_heading")
-let miss_heading = document.getElementById("miss_heading")
+let word_table = document.getElementById("word_table")
 let audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
 let timer
 
@@ -21,15 +24,18 @@ let attempt_start = counter
 
 yes_button.style.visibility = "hidden"
 no_button.style.visibility = "hidden"
+yes_no_box.style.visibility = "hidden"
 submit_button.style.visibility = "hidden"
-correct_heading.style.visibility = "hidden"
-miss_heading.style.visibility = "hidden"
+submit_box.style.visibility = "hidden"
+word_table.style.visibility = "hidden"
 time_remaining.textContent = counter
 
 function start_turn() {
     start_button.style.visibility = "hidden"
+    start_box.style.visibility = "hidden"
     yes_button.style.visibility = "visible"
     no_button.style.visibility = "visible"
+    yes_no_box.style.visibility = "visible"
     current_word.textContent = next_word
 
     timer = setInterval(cycle_timer, 1000)
@@ -39,29 +45,42 @@ function stop_turn() {
     clearInterval(timer)
     yes_button.style.visibility = "hidden"
     no_button.style.visibility = "hidden"
+    yes_no_box.style.visibility = "hidden"
     submit_button.style.visibility = "visible"
-    current_word.textContent = "..."
+    submit_box.style.visibility = "visible"
+    current_word.textContent = ""
 
     // display correct/missed words
-    let addItem = function (ul_id, word) {
-        let ul = document.getElementById(ul_id)
-        let li = document.createElement("li")
-        li.appendChild(document.createTextNode(word))
-        ul.appendChild(li)
+    let addItem = function (word, mark, mark_color) {
+        let tbody = document.getElementById("word_table_body")
+        let tr = document.createElement("tr")
+        let td1 = document.createElement("td")
+        let td2 = document.createElement("td")
+        td1.appendChild(document.createTextNode(word))
+        td2.appendChild(document.createTextNode(mark))
+        td2.style.color = mark_color
+        document.createSty
+        tr.appendChild(td1)
+        tr.appendChild(td2)
+        tbody.appendChild(tr)
     }
+
+    let mark_corr = "\u2713"
+    let mark_miss = "\u2717"
+    let color_corr = "#33C433"
+    let color_miss = "#FF1B09"
 
     for(let i=0; i < attempt_words.length; i++){
         if(attempt_correct[i] == true) {
-            addItem("correct_list", attempt_words[i])
+            addItem(attempt_words[i], mark_corr, color_corr)
         }
         else if(attempt_correct[i] == false) {
-            addItem("miss_list", attempt_words[i])
+            addItem(attempt_words[i], mark_miss, color_miss)
         }
 
     }
 
-    correct_heading.style.visibility = "visible"
-    miss_heading.style.visibility = "visible"
+    word_table.style.visibility = "visible"
 
 }
 
@@ -163,6 +182,7 @@ function cycle_timer() {
 
 start_button.onclick = function() {
     start_turn()
+    audioCtx.resume()
 }
 
 yes_button.onclick = function() {

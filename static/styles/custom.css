@@ -85,9 +85,72 @@
   display: inline; }
 .admin-input {
   width: 10rem; }
+.myturn, .time-box, .word-box, .bottom-box {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto; }
+.time-box {
+  width: 10rem;
+  margin: 3rem auto 0rem auto;
+  padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  /*border: 3px solid red;*/
+  font-size: 8rem;
+  text-align: center; }
+.word-box {
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6rem;
+  text-align: center;
+}
+.word-table {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  text-align: center;
+  margin-top: 3rem;
+  margin-bottom: 0;}
+.word-table td {
+  width: 50%;
+  text-align: right;
+  padding: 0.2rem 1.5rem;
+  border: none; }
+.word-table td:last-child {
+  text-align: left; }
+.bottom-box {
+  position: fixed;
+  bottom: 0%;
+  left: 50%;
+  transform: translateX(-50%);}
+button.button-primary.turn-button {
+  width: 100%;
+  height: 10rem;
+  margin-bottom: 0;
+  font-size: 5rem;
+  padding-top:1rem; }
+.one-half.column.no-margin {
+  width: 50%;
+  margin-left: 0; }
+button.button-primary.turn-button.yes-button {
+  background-color: #33C433;
+  border-color: #33C433;
+  height: 20rem;
+  font-size: 10rem;
+}
+button.button-primary.turn-button.no-button {
+  background-color: #FF1B09;
+  border-color: #FF1B09;
+  height: 20rem;
+  font-size: 10rem;
+}
 
 /* Larger than phone */
 @media (min-width: 550px) {
+  .myturn, .time-box, .word-box, .bottom-box {
+    max-width: 550px; }
   .welcome-title {
     max-width: 100%}
   .header {
