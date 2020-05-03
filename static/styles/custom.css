@@ -5,6 +5,10 @@
   margin-left: auto;
   margin-right: auto;
   text-align: center; }
+.footer {
+  margin-top: 4rem;
+  font-size: 1.2rem;
+  text-align: center; }
 .welcome-title {
   max-width: 30rem}
 .center-image {

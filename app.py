@@ -3,6 +3,7 @@ from itertools import cycle
 
 from flask import Flask, render_template, url_for, redirect, request, make_response
 
+from _version import __version__
 from utils import *
 
 app = Flask(__name__)
@@ -10,7 +11,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html", version=__version__)
 
 
 @app.route("/admin/")
