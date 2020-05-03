@@ -1,3 +1,148 @@
+<html lang="en">
+<head>
+  <!-- Basic Page Needs -->
+  <meta charset="utf-8">
+  <title>Gameover</title>
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- FONT -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="../static/styles/normalize.css">
+  <link rel="stylesheet" href="../static/styles/skeleton.css">
+  <link rel="stylesheet" href="../static/styles/custom.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="game-id-box">
+    <p class="game-id-text">Game: {{ gid }}</p>
+  </div>
+
+  <div class="container">
+    <section class="header score-header">
+      <h1>{{ winner_str }}</h1>
+    </section>
+    <div class="score-width">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Team A</td>
+            <td>{{ scores.r1a }}</td>
+            <td>{{ scores.r2a }}</td>
+            <td>{{ scores.r3a }}</td>
+            <td>{{ scores.totala }}</td>
+          </tr>
+          <tr>
+            <td>Team B</td>
+            <td>{{ scores.r1b }}</td>
+            <td>{{ scores.r2b }}</td>
+            <td>{{ scores.r3b }}</td>
+            <td>{{ scores.totalb }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="row final-stats">MVP: {{ stats.mvp_name }}</div>
+      <div class="row final-stats">Hardest Word: {{ stats.hardest_word }}</div>
+      <div class="row final-stats">Easiest Word: {{ stats.easiest_word }}</div>
+      <br>
+      <div class="row center-text">
+        <a href="/" class="button button-primary">Play Again!</a>
+      </div>
+
+      <section class="header score-header">
+        <h2>Box Score</h2>
+      </section>
+
+      <div class="row center-text large-text">Team A</div>
+      <table class="box-score-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, r1, r2, r3, tot in stats.teama %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ r1 }}</td>
+            <td>{{ r2 }}</td>
+            <td>{{ r3 }}</td>
+            <td>{{ tot }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="row center-text large-text">Team B</div>
+      <table class="box-score-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, r1, r2, r3, tot in stats.teamb %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ r1 }}</td>
+            <td>{{ r2 }}</td>
+            <td>{{ r3 }}</td>
+            <td>{{ tot }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="row center-text large-text">Word Times</div>
+      <table class="box-score-table">
+        <thead>
+          <tr>
+            <th>Word</th>
+            <th>R1</th>
+            <th>R2</th>
+            <th>R3</th>
+            <th>Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for word, r1, r2, r3, avg in stats.words %}
+          <tr>
+            <td>{{ word }}</td>
+            <td>{{ r1 }}</td>
+            <td>{{ r2 }}</td>
+            <td>{{ r3 }}</td>
+            <td>{{ avg }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>
+
+
+<!--
 <!doctype html>
 <title>Game Over</title>
 <h1>{{ winner_str }}</h1>
@@ -25,3 +170,4 @@
 
 
 <a href="/">Play Again!</a>
+-->

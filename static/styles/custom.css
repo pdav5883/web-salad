@@ -50,6 +50,18 @@
   margin-left: auto;
   margin-right: auto;
   font-size:2rem}
+.box-score-table {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 4rem;
+  font-size: 1.5rem;
+  }
+.box-score-table td {
+  border: 1px solid #E1E1E1;}
+.box-score-table tbody tr:last-child {
+  border-top: 2px solid #E1E1E1;}
+  .box-score-table td:last-child {
+  border-left: 2px solid #E1E1E1;}
 .roster-table {
   margin: 1.5rem auto 0rem; }
 .score-table td {
@@ -146,6 +158,10 @@ button.button-primary.turn-button.no-button {
   height: 20rem;
   font-size: 10rem;
 }
+.final-stats {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.5rem; }
 
 /* Larger than phone */
 @media (min-width: 550px) {

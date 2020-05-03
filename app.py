@@ -313,31 +313,48 @@ def game_over():
     if not game.complete:
         return redirect(url_for("bad"))
 
-    score_a, score_b = get_scores_by_game_id(gid)
-    names_a, names_b = get_teams_by_game_id(gid)
+    scores_a, scores_b = get_scores_by_round_by_game_id(gid)
+    scores = {"r1a": scores_a[0] or "-",
+              "r1b": scores_b[0] or "-",
+              "r2a": scores_a[1] or "-",
+              "r2b": scores_b[1] or "-",
+              "r3a": scores_a[2] or "-",
+              "r3b": scores_b[2] or "-",
+              "totala": sum(scores_a),
+              "totalb": sum(scores_b)}
 
-    if score_a > score_b:
-        winner_str = "Congratulations Team A!"
-    elif score_a < score_b:
-        winner_str = "Congratulations Team B!"
+    if sum(scores_a) > sum(scores_b):
+        winner_str = "Team A Wins!"
+    elif sum(scores_a) < sum(scores_b):
+        winner_str = "Team B Wins!"
     else:
         winner_str = "Woah, a tie!!"
 
-    mvp_name, mvp_points, hardest_word, hardest_time, easiest_word, easiest_time = get_game_stats(gid)
+    teama_stats = get_team_stats(gid, "a")
+    teamb_stats = get_team_stats(gid, "b")
+    words_stats = get_word_stats(gid)
+
+    mvp_a = teama_stats[0]
+    mvp_b = teamb_stats[0]
+    if mvp_a[4] > mvp_b[4]:
+        mvp_name = mvp_a[0]
+    elif mvp_a[4] < mvp_b[4]:
+        mvp_name = mvp_b[0]
+    else:
+        mvp_name = f"{mvp_a[0]}/{mvp_b[0]}"
+
+    stats = {"teama": teama_stats,
+             "teamb": teamb_stats,
+             "words": words_stats,
+             "mvp_name": mvp_name,
+             "hardest_word": words_stats[0][0],
+             "easiest_word": words_stats[-2][0]}
 
     return render_template("gameover.html",
+                           gid=gid,
                            winner_str=winner_str,
-                           score_a=score_a,
-                           score_b=score_b,
-                           names_a=names_a,
-                           names_b=names_b,
-                           mvp_name=mvp_name,
-                           mvp_points=mvp_points,
-                           hardest_word=hardest_word,
-                           hardest_time=hardest_time,
-                           easiest_word=easiest_word,
-                           easiest_time=easiest_time
-                           )
+                           scores=scores,
+                           stats=stats)
 
 
 @app.route("/bad/")
@@ -350,7 +367,7 @@ def good():
     return "Good job :)"
 
 @app.route("/test-scoreboard/")
-def test():
+def test_scoreboard():
     gid = "Applesauce"
     teams = [("Peter", "Kelly"),
              ("Matt", "Molly"),
@@ -378,6 +395,58 @@ def test():
                            status=status,
                            scores=scores,
                            teams=teams)
+
+@app.route("/test-gameover/")
+def test_gameover():
+    gid = "Applesauce"
+    teams = [("Peter", "Kelly"),
+             ("Matt", "Molly"),
+             ("Juan", "Emily"),
+             ("Gio", "Miz")]
+
+    scores = {"r1a": 3 or "-",
+              "r1b": 7 or "-",
+              "r2a": 4 or "-",
+              "r2b": 6 or "-",
+              "r3a": 10 or "-",
+              "r3b": 0 or "-",
+              "totala": 17,
+              "totalb": 13}
+
+    winner = "A"
+
+    stats_teama = [("Peter", 3, 6, 1, 10),
+                   ("Matt", 3, 6, 2, 11),
+                   ("Juan", 3, 6, 3, 12),
+                   ("Gio", 3, 6, 4, 13),
+                   ("Total", 12, 24, 6, 17)]
+    stats_teamb = [("Kelly", 3, 6, 1, 10),
+                   ("Molly", 3, 6, 2, 11),
+                   ("Emily", 3, 6, 3, 12),
+                   ("Miz", 3, 6, 4, 13),
+                   ("Total", 12, 24, 6, 10)]
+    words = [("Dingleberry", 1, 2, 3, 2),
+             ("Apple", 5, 6, 77, 6),
+             ("Bear", 3, 5, 4, 33),
+             ("Bailey", 1, 2, 4, 2),
+             ("Average", 4, 3, 4, 3)]
+
+    stats = {"mvp_name": "Kelly",
+             "mvp_points": 10,
+             "hardest_word": "Dingleberry",
+             "hardest_time": 10.5,
+             "easiest_word": "Alex Ovechkin",
+             "easiest_time": 3,
+             "teama": stats_teama,
+             "teamb": stats_teamb,
+             "words": words
+             }
+
+    return render_template("gameover.html",
+                           gid=gid,
+                           winner=winner,
+                           scores=scores,
+                           stats=stats)
 
 
 if __name__ == "__main__":

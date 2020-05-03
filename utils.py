@@ -5,6 +5,7 @@ from typing import List, Tuple, Union, Dict
 import copy
 import sqlite3
 import ast
+from collections import defaultdict
 
 from model import Entry, Game, Player, Word, Attempt
 
@@ -296,38 +297,73 @@ def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
     return score_a, score_b
 
 
-def get_game_stats(gid: str) -> Tuple[str, int, str, int, str, int]:
+def get_team_stats(gid: str, team: str) -> List[Tuple[str, int, int, int, int]]:
     """
-    Gets end of game statistics from attempts data
+    Return a list of tuples with stats for a full team. Each entry in list corresponds to player. List is sorted by
+    total points scored by player. Each tuple contains name str, r1 score int, r2 score int, r3 score int, total score
+    int. There is an extra entry for team total.
     """
-    query_mvp = f"SELECT player.name, " \
-                f"(SELECT COUNT(attempt.id) FROM attempt " \
-                f"WHERE player.id = attempt.pid AND attempt.success = 1 " \
-                f"GROUP BY attempt.pid), " \
-                f"(SELECT COUNT(attempt.id) FROM attempt " \
-                f"WHERE player.id = attempt.pid AND attempt.success = 0 " \
-                f"GROUP BY attempt.pid) " \
-                f"FROM player WHERE player.gid = '{gid}'"
-    data_mvp = conn.execute(query_mvp).fetchall()
-    data_mvp.sort(key=lambda x: x[1] - x[2], reverse=True)
+    query = f"SELECT player.name, " \
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 1 AND attempt.success = 1), "\
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 1 AND attempt.success = 0), "\
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 2 AND attempt.success = 1), "\
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 2 AND attempt.success = 0), "\
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 3 AND attempt.success = 1), "\
+        f"(SELECT COUNT(attempt.id) FROM attempt WHERE player.id = attempt.pid AND attempt.round = 3 AND attempt.success = 0) "\
+        f"FROM player WHERE player.gid = '{gid}' AND player.team = '{team}'"
+    player_data = [(pdata[0],
+                    pdata[1] - pdata[2],
+                    pdata[3] - pdata[4],
+                    pdata[5] - pdata[6],
+                    pdata[1] - pdata[2] + pdata[3] - pdata[4] + pdata[5] - pdata[6])
+                   for pdata in conn.execute(query).fetchall()]
+    player_data.sort(key=lambda x: x[4], reverse=True)
 
-    mvp_name = data_mvp[0][0]
-    mvp_points = data_mvp[0][1] - data_mvp[0][2]
+    total_r1 = sum([x[1] for x in player_data])
+    total_r2 = sum([x[2] for x in player_data])
+    total_r3 = sum([x[3] for x in player_data])
+    total = total_r1 + total_r2 + total_r3
 
-    query_words = f"SELECT word.word, SUM(attempt.seconds) " \
-                  f"FROM word " \
-                  f"INNER JOIN attempt ON word.id = attempt.wid " \
-                  f"WHERE word.gid = '{gid}' " \
-                  f"GROUP BY word.word"
-    data_words = conn.execute(query_words).fetchall()
-    data_words.sort(key=lambda x: x[1], reverse=True)
+    player_data.append(("Total", total_r1, total_r2, total_r3, total))
 
-    hardest_word = data_words[0][0]
-    hardest_time = data_words[0][1]
-    easiest_word = data_words[-1][0]
-    easiest_time = data_words[-1][1]
+    return player_data
 
-    return mvp_name, mvp_points, hardest_word, hardest_time, easiest_word, easiest_time
+
+def get_word_stats(gid: str) -> List[Tuple[str, int, int, int, int]]:
+    """
+    Each entry in list is tuple of word data. Tuple contains word str, r1 time, r2 time, r3 time, avg time. List is
+    sorted by avg time. Extra list entry for total avg.
+    """
+    """
+    query_words = f"SELECT word.word, attempt.round, SUM(attempt.seconds) " \
+        f"FROM word " \
+        f"INNER JOIN attempt ON word.id = attempt.wid " \
+        f"WHERE word.gid = '{gid}' " \
+        f"GROUP BY word.word, attempt.round"
+    """
+    query = f"SELECT word.word, " \
+        f"(SELECT SUM(attempt.seconds) FROM attempt WHERE word.id = attempt.wid AND attempt.round = 1), " \
+        f"(SELECT SUM(attempt.seconds) FROM attempt WHERE word.id = attempt.wid AND attempt.round = 2), " \
+        f"(SELECT SUM(attempt.seconds) FROM attempt WHERE word.id = attempt.wid AND attempt.round = 3) " \
+        f"FROM word WHERE word.gid = '{gid}'"
+
+    word_data = [(wdata[0], wdata[1], wdata[2], wdata[3], round(sum(wdata[1:]) / 3, 1))
+                 for wdata in conn.execute(query).fetchall()]
+    word_data.sort(key=lambda x: x[4], reverse=True)
+
+    total_r1 = sum([x[1] for x in word_data])
+    total_r2 = sum([x[2] for x in word_data])
+    total_r3 = sum([x[3] for x in word_data])
+    num_words = len(word_data)
+
+    avg_r1 = round(total_r1 / num_words, 1)
+    avg_r2 = round(total_r2 / num_words, 1)
+    avg_r3 = round(total_r3 / num_words, 1)
+    avg_total = round((total_r1 + total_r2 + total_r3) / (3 * num_words), 1)
+
+    word_data.append(("Average", avg_r1, avg_r2, avg_r3, avg_total))
+
+    return word_data
 
 
 def create_rand_id(n=10) -> str:

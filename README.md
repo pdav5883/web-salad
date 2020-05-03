@@ -29,7 +29,6 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 
 ## WIP
 - Way to constrain teams so pairs are separated
-- Noise still broken for IOS even though test page works
 - Add game length to end stats
 - If there is time remaining between rounds and next round is shorter time, use diff or ratio
 - Consider cache for num words remaining, score, end of game stats, etc
@@ -37,8 +36,7 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 - Add game details to admin panel
 - Delete games from admin panel
 - Change all ../static paths to /static
-- Re-styling:
-    - My turn
-    - Game over
-- List of last round words
 - Organize style sheet
+- Production server
+- Running in EC2 without active SSH
+- Razzle dazzle
