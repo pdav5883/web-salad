@@ -31,7 +31,6 @@ In Route53 update the IPv4 record set for `salad.{your-domain}` to the public IP
 - V1
     - Production server
     - Running in EC2 without active SSH
-    - Timer font
 - Future
     - Way to constrain teams so pairs are separated
     - Add game length to end stats
