@@ -1,3 +1,4 @@
+import os
 import string
 import random
 import json
@@ -9,7 +10,8 @@ from collections import defaultdict
 
 from model import Entry, Game, Player, Word, Attempt
 
-conn = sqlite3.connect("data/salad.db", check_same_thread=False)
+root_dir = os.path.dirname(os.path.abspath(__file__))
+conn = sqlite3.connect(os.path.join(root_dir,"data","salad.db"), check_same_thread=False)
 
 #######################################
 # Generic Database Interaction

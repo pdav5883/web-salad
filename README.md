@@ -1,11 +1,11 @@
 # web-salad
-Play some salad bowl online
+A web application to play remote Salad Bowl.
 
 ## Tags
 - `v0.1`: Initial working version
 - `v0.2`: Minor game experience modifications (button size, sound alerts, update buttons)
-- `v0.3`: XX
-
+- `v0.3`: Updated data model to SQLite
+- `v1.0`: Updated styling and production deployment
 
 ## Local Execution (i.e. not available over internet)
 Create a virtualenv with `python >= 3.7` and `flask` installed. Execute `flask run` to serve the app at `localhost:5000`. Use any web browser to navigate to this location from the local machine.
@@ -27,6 +27,7 @@ This deployment uses the Flask development server to serve the application, and 
 Create an EC2 instance from the **Amazon Linux 2 AMI** with IAM role `ec2-web-salad-deploy` (read access into bucket) and security group with http (80) and ssh (22) open inbound from all (0.0.0.0/0). All other settings are default.
 
 SSH into the EC2 instance (user is ec2-user@) and run:
+- `sudo yum update`
 - `sudo yum install python3`
 - `sudo pip3 install flask`
 - `mkdir v{version}`
@@ -39,11 +40,12 @@ SSH into the EC2 instance (user is ec2-user@) and run:
 This last command will deattach the server process from the session so you can exit SSH without killing the application. Logs will be written to `salad.log`. To kill the server later, SSH back into the instance and run `sudo ps -ef | grep "python3 app.py"` to get the PIDs of the server, then `sudo kill -9 {PID1} {PID2}` substituting in the PIDs of the `python3 app.py` and `sudo python3.py` processes.
 
 ### Server Option 2: WSGI Production Server
-This deployment is considerably more complicated and likely completely unnecessary, but is closer to the "right" way of doing things.
+This deployment is considerably more complicated and likely completely unnecessary, but is closer to the "right" way of doing things. This process is based on two references [here](https://medium.com/@jQN/deploy-a-flask-app-on-aws-ec2-1850ae4b0d41) and [here](https://pypi.org/project/mod-wsgi/).
 
 Create an EC2 instance from the **Ubuntu 18.04 AMI** with IAM role `ec2-web-salad-deploy` (read access into bucket) and security group with http (80) and ssh (22) open inbound from all (0.0.0.0/0). All other settings are default.
 
 First SSH into the instance (user is ubuntu@) and get the code:
+- `sudo apt update`
 - `sudo apt install awscli unzip`
 - `mkdir v{version}`
 - `cd v{version}`
@@ -58,7 +60,7 @@ Test to make sure that the server installed correctly by navigating a browser to
 Here's where the fun starts. Since web-salad uses dataclasses in the model, it requires at least python 3.7 to run. The default python3 installation on the AMI is 3.6.9. Further, WSGI (the apache module used to serve python apps) is built with python 2. So we need to 1) get the right version of python installed, 2) build the WSGI module with that version of python, 3) link that built module to the apache server, and 4) point the server to the flask application.
 
 First let's get python installed:
-- `sudo apt install python3.7 python3.7-dev python3.7 venv`
+- `sudo apt install python3.7 python3.7-dev python3.7-venv python3-venv`
 
 Create a virtual environment with the correct python version and pip install dependencies:
 - `cd ~`
@@ -81,12 +83,12 @@ That command will output two lines similar to:
 - `LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py37.cpython-37m-x86_64-linux-gnu`.so"
 - `WSGIPythonHome "/home/ubuntu/venv"`
 
-Copy these two lines to the end of `/etc/apache2/apache2.conf` (need to use `sudo nano` to edit)/
+Copy these two lines before the #vim line at the end of `/etc/apache2/apache2.conf` (need to use `sudo nano` to edit)/
 
 Now that WSGI is installed and configured, we need to point the server to the application. Link the application to the apache directory with:
 - `sudo ln -sT ~/v{version} /var/www/html/web-salad`
 
-Add the following block to the apache site config immediately after the `DocumentRoot /var/www/html` line with `sudo nano`:
+Add the following block to the apache site config file `/etc/apache2/sites-enabled/000-default.conf` immediately after the `DocumentRoot /var/www/html` line with `sudo nano`:
 ```
 WSGIDaemonProcess web-salad threads=5
 WSGIScriptAlias / /var/www/html/web-salad/app.wsgi
