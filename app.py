@@ -141,7 +141,7 @@ def wait_for_players():
     return render_template("roster.html", gid=gid, names_ready=names_ready, is_captain=is_captain, captain_name=captain_name)
 
 
-@app.route("/preparegame/")
+@app.route("/preparegame/", methods=["POST"])
 def prepare_game():
     if not auth_player(request):
         return redirect(url_for("bad"))
@@ -158,17 +158,46 @@ def prepare_game():
     if game.captain_id != this_player.id:
         return redirect(url_for("wait_for_players"))
 
-    # assign teams
+    name_list = request.form.getlist("name_list")
+    group_list = request.form.getlist("group_list")
+    names_groups = list(zip(name_list, group_list))
+
+    # constraint dict references names in
+    constraints = {}
+    for i, (name_i, group_i) in enumerate(names_groups):
+        for j, (name_j, group_j) in enumerate(names_groups):
+            if i != j and group_i == group_j:
+                constraints[name_i] = name_j
+                break
+
     players = get_players_by_game_id(gid)
+    players_post = list(players)
+    players_by_name = {player.name: player for player in players}
+    shuffle(players)
+
+    # assign teams and enforce constraint that two players with same
+    # group label end up on different teams
     teams_id = {"a": [], "b": []}
     teams_name = {"a": [], "b": []}
     a_b = cycle(["a", "b"])
-    shuffle(players)
-    for player in players:
+
+    while len(players):
         team = next(a_b)
+        player = players.pop()
         player.team = team
         teams_id[team].append(player.id)
         teams_name[team].append(player.name)
+
+        if player.name in constraints:
+            other_team = next(a_b)
+            other_player = players_by_name[constraints[player.name]]
+            other_player.team = other_team
+            teams_id[other_team].append(other_player.id)
+            teams_name[other_team].append(other_player.name)
+
+            del constraints[player.name]
+            del constraints[other_player.name]
+            players.remove(other_player)
 
     # set up the game
     game.started = True
@@ -177,7 +206,7 @@ def prepare_game():
     game.time_remaining = game.r1_sec
 
     update_entry(game)
-    update_entries(players)
+    update_entries(players_post)
 
     return redirect(url_for("scoreboard"))
 
@@ -303,7 +332,7 @@ def submit_turn():
     return redirect(url_for("scoreboard"))
 
 
-@app.route("/gameover")
+@app.route("/gameover/")
 def game_over():
     if not auth_player(request):
         return redirect(url_for("bad"))
@@ -366,6 +395,22 @@ def bad():
 @app.route("/good/")
 def good():
     return "Good job :)"
+
+
+@app.route("/test-roster/")
+def test_roster():
+    gid = "Applesauce"
+    names_ready = [("Peter", True),
+                   ("Kelly", True),
+                   ("Matt", False),
+                   ("Molly", True),
+                   ("Emily", False),
+                   ("Juan", True)]
+    is_captain = True
+    captain_name = "Peter"
+
+    return render_template("roster.html", gid=gid, names_ready=names_ready, is_captain=is_captain, captain_name=captain_name)
+
 
 @app.route("/test-scoreboard/")
 def test_scoreboard():

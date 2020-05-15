@@ -373,7 +373,7 @@ def create_rand_id(n=10) -> str:
     return "".join(random.choice(chars) for _ in range(n))
 
 
-def bump_player_queue(queue: str) -> Tuple[str, str, str]:
+def bump_player_queue(queue: List[List[str]]) -> List[List[str]]:
     """
     Increment the player queue.
 

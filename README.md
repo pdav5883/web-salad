@@ -119,3 +119,5 @@ If something goes wrong error logs are written to `/var/log/apache2/error.log`
     - Add game details to admin panel
     - Delete games from admin panel
     - Razzle dazzle
+    - Do not fail if single player tries to start
+    - Don't allow multiple players with the same name in single game

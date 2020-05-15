@@ -29,11 +29,14 @@
       <tbody>
         {% for name, ready in names_ready %}
         <tr>
-            <td>{{ name }}</td>
+            <td class="pair-name">{{ name }}</td>
             {% if ready %}
             <td>&#10003</td>
             {% else %}
             <td>&#8230</td>
+            {% endif %}
+            {% if is_captain %}
+            <td><input type="text" class="pair-group" size="2"></td>
             {% endif %}
         </tr>
         {% endfor %}
@@ -49,9 +52,9 @@
     </div>
     <div class="row center-text">
       {% if is_captain %}
-      <div class="row">You are the Captain!</div>
+      <div class="row">You are the Captain!<br>Enter pair-wise constraints using the same letter per pair.</div>
       <div class="row">
-        <a href="/preparegame/" class="button button-primary start-game-button">Start Game</a>
+        <button id="start_button" class="button button-primary start-game-button">Start Game</button>
       </div>
       {% else %}
       <div class="row">Waiting for {{ captain_name }} to start game...</div>
@@ -61,5 +64,5 @@
   </div>
 
 </body>
-<script type="text/javascript" src="/static/scripts/beeptest.js"></script>
+<script type="text/javascript" src="/static/scripts/roster.js"></script>
 </html>
