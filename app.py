@@ -165,10 +165,13 @@ def prepare_game():
     # constraint dict references names in
     constraints = {}
     for i, (name_i, group_i) in enumerate(names_groups):
+        if not group_i:
+            continue
         for j, (name_j, group_j) in enumerate(names_groups):
             if i != j and group_i == group_j:
                 constraints[name_i] = name_j
                 break
+    print(constraints)
 
     players = get_players_by_game_id(gid)
     players_post = list(players)
