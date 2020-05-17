@@ -112,7 +112,6 @@ If something goes wrong error logs are written to `/var/log/apache2/error.log`
 ## WIP
 - Future
     - Add game length to end stats
-    - If there is time remaining between rounds and next round is shorter time, use diff or ratio
     - Consider cache for num words remaining, score, end of game stats, etc
     - Include message with "bad" page
     - Add game details to admin panel

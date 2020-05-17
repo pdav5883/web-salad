@@ -171,7 +171,6 @@ def prepare_game():
             if i != j and group_i == group_j:
                 constraints[name_i] = name_j
                 break
-    print(constraints)
 
     players = get_players_by_game_id(gid)
     players_post = list(players)
@@ -321,10 +320,12 @@ def submit_turn():
             game.complete = True
             game.queue = [[None], [None]]
 
-        # move to the next round, same person's turn with the balance of their time
+        # move to the next round, same person's turn with the balance of their time multiplied by ratio of round times
         else:
+            time_prev_round = game.__getattribute__(f"r{game.round}_sec")
+            time_next_round = game.__getattribute__(f"r{game.round + 1}_sec")
             game.round += 1
-            game.time_remaining = time_remaining
+            game.time_remaining = int(time_remaining * time_next_round / time_prev_round)
 
     else:
         game.time_remaining = game.__getattribute__(f"r{game.round}_sec")
@@ -347,12 +348,12 @@ def game_over():
         return redirect(url_for("bad"))
 
     scores_a, scores_b = get_scores_by_round_by_game_id(gid)
-    scores = {"r1a": scores_a[0] or "-",
-              "r1b": scores_b[0] or "-",
-              "r2a": scores_a[1] or "-",
-              "r2b": scores_b[1] or "-",
-              "r3a": scores_a[2] or "-",
-              "r3b": scores_b[2] or "-",
+    scores = {"r1a": scores_a[0],
+              "r1b": scores_b[0],
+              "r2a": scores_a[1],
+              "r2b": scores_b[1],
+              "r3a": scores_a[2],
+              "r3b": scores_b[2],
               "totala": sum(scores_a),
               "totalb": sum(scores_b)}
 
