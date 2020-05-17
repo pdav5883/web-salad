@@ -180,6 +180,14 @@ def get_players_ready_by_game_id(gid: str, pids: List[str]) -> List[bool]:
     return ready
 
 
+def player_exists_by_name_game_id(gid: str, name: str) -> bool:
+    """
+    Return whether a player with given name already exists in the game
+    """
+    query = f"SELECT 1 FROM player WHERE gid = '{gid}' AND name = '{name}'"
+    return True if conn.execute(query).fetchone() else False
+
+
 def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
     """
     Return player names by team

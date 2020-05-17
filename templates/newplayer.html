@@ -29,6 +29,9 @@
         <input class="center-text" type="text" id="pname" name="pname" placeholder="McLovin">
         <div class="center-text">
           <input class="button-primary" type="submit" value="Submit">
+          {% for err_msg in get_flashed_messages() %}
+          <div class="row">{{ err_msg }}</div>
+          {% endfor %}
         </div>
       </form>
     </div>

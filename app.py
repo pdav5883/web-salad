@@ -1,12 +1,14 @@
+import os
 from random import shuffle
 from itertools import cycle
 
-from flask import Flask, render_template, url_for, redirect, request, make_response
+from flask import Flask, render_template, url_for, redirect, request, make_response, flash
 
 from _version import __version__
 from utils import *
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 
 @app.route("/")
@@ -73,7 +75,12 @@ def submit_player():
     pname = request.args.get("pname", None)
 
     if not pname:
-        return redirect(url_for("submit_player"))
+        flash("You have to enter a name...")
+        return redirect(url_for("new_player"))
+
+    if player_exists_by_name_game_id(gid, pname):
+        flash("Try again, someone already picked that name...")
+        return redirect(url_for("new_player"))
 
     player = Player(create_rand_id(), gid, pname)
     add_entry(player)
