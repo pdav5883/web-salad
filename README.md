@@ -6,6 +6,7 @@ A web application to play remote Salad Bowl.
 - `v0.2`: Minor game experience modifications (button size, sound alerts, update buttons)
 - `v0.3`: Updated data model to SQLite
 - `v1.0`: Updated styling and production deployment
+- `v1.1`: Added team constraints, fixed inter-round timing, fixed minor bugs
 
 ## Local Execution (i.e. not available over internet)
 Create a virtualenv with `python >= 3.7` and `flask` installed. Execute `flask run` to serve the app at `localhost:5000`. Use any web browser to navigate to this location from the local machine.
