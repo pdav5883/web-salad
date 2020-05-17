@@ -150,12 +150,17 @@ def prepare_game():
     pid = request.cookies.get("pid")
 
     game: Game = get_entry_by_id(gid, Game)
+    players = get_players_by_game_id(gid)
     this_player: Player = get_entry_by_id(pid, Player)
 
     if game.started:
         return redirect(url_for("scoreboard"))
 
     if game.captain_id != this_player.id:
+        return redirect(url_for("wait_for_players"))
+
+    # don't let the game start with just one player
+    if len(players) <= 1:
         return redirect(url_for("wait_for_players"))
 
     name_list = request.form.getlist("name_list")
@@ -172,7 +177,7 @@ def prepare_game():
                 constraints[name_i] = name_j
                 break
 
-    players = get_players_by_game_id(gid)
+    # need to keep a list of player references to update DB later
     players_post = list(players)
     players_by_name = {player.name: player for player in players}
     shuffle(players)
