@@ -1,5 +1,5 @@
 # web-salad
-A web application to play remote Salad Bowl.
+A web application to play remote [Salad Bowl](https://thenerdy.com/how-to-play-salad-bowl/) with your friends during a pandemic.
 
 ## Tags
 - `v0.1`: Initial working version
