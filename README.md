@@ -8,6 +8,70 @@ A web application to play remote [Salad Bowl](https://thenerdy.com/how-to-play-s
 - `v1.0`: Updated styling and production deployment
 - `v1.1`: Added team constraints, fixed inter-round timing, fixed minor bugs
 
+## Serverless Data Model
+- DynamoDB web-salad-table
+- gid is the parent id used as secondary index to query relevant data for game
+
+- Game
+	- id (random str)
+	- type = game (str)
+	- r1_sec (int)
+	- r2_sec (int)
+	- r3_sec (int)
+	- started (bool)
+	- comlete (bool)
+	- captain_id (str)
+	- queue (str, list of list)
+	- round (int)
+	- time_remaining (int)
+- Word
+	- id (random str)
+	- gid (str)
+	- type = word
+	- pid (str)
+	- word (str)
+	- r1_done (bool)
+	- r2_done (bool)
+	- r3_done (bool)
+- Player
+	- id (random str)
+	- gid (str)
+	- type = player
+	- name (str)
+	- team (str)
+- Attempt
+	- id
+	- gid (str)
+	- type = attempt
+	- wid (str)
+	- pid (str)
+	- round (int)
+	- success (bool)
+	- seconds (int)
+	- team (str)
+	
+## API/Lambda Mapping
+Trying for minimal touch refactor rather than rebuild of back-end, there are 10 endpoints that the client will hit. Rather than one lambda for each or one lambda for all, grouping with similar functions.
+- SaladQueryGame:
+	- `/getversion`: salad bowl version
+	- `/getgame`: basic game properties, verify that game exists
+	- `/getroster`: see who has joined, who is ready
+	- `/getscoreboard`: during game, see score, round, turn
+	- `/getendgame`: gameover stats and winner
+- SaladBuildGame:
+	- `/submitgame`: create a new game
+	- `/submitplayer`: create a new player in game
+	- `/submitwords`: create new words in game for player
+	- `/preparegame` (POST): captain can reach endpoint, build the teams
+- SaladPlayGame:
+	- `/prepareturn`: get words to run through for turn from DB, time remaining
+	- `/submitturn` (POST): tell the DB about word attempts during turn
+
+
+### Cookies w/ Lambda
+- To set a cookie put "cookies": ["cookiename1=cookievalue1", "cookiename2=cookievalue2"] as a field in response dict
+- To get a cookie look in "cookies" field in event variable. Will come in same format as above, so will need to parse into dict.
+
 ## Local Execution (i.e. not available over internet)
 Create a virtualenv with `python >= 3.7` and `flask` installed. Execute `flask run` to serve the app at `localhost:5000`. Use any web browser to navigate to this location from the local machine.
 
