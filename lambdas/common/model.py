@@ -5,11 +5,49 @@ from typing import List, Tuple, Dict
 
 
 class Entry:
-    table: str = None
 
-    def __str__(self):
-        _, rep_list = self.get_attr_rep_lists()
-        return "(" + ",".join(rep_list) + ")"
+    def to_ddb_dict(self) -> Dict:
+
+        attrs = self.get_annotations()
+
+        t = {}
+
+        for attr, typ in attrs.items():
+            val = self.__getattribute__(attr)
+            
+            if typ == int:
+                t[attr] = {"N": str(val)}
+            elif typ == bool:
+                t[attr] = {"BOOL": val}
+            elif typ == str:
+                t[attr] = {"S": val}
+            else:
+                t[attr] = {"S": str(val).replace("'", "\"")}
+
+        return t
+
+    """
+    def to_update_dict(self) -> Dict:
+
+        attrs = self.get_annotations()
+
+        t = {}
+
+        for attr, typ in attrs.items():
+            val = self.__getattribute__(attr)
+            
+            if typ == int:
+                t[attr] = str(val)
+            elif typ == bool:
+                t[attr] = val
+            elif typ == str:
+                t[attr] = val
+            else:
+                t[attr] = str(val).replace("'", "\"")
+
+        return t
+    """
+
 
     def get_attr_rep_lists(self) -> Tuple[List[str], List[str]]:
         """
@@ -41,7 +79,6 @@ class Entry:
         Returns a dict where keys are class attributes and values are attribute types
         """
         attrs = dict(cls.__annotations__)
-        del attrs["table"]
         return attrs
 
 
@@ -62,7 +99,7 @@ class Game(Entry):
 
     def __post_init__(self):
         """
-        When init from SQL row, queue is a string
+        When init from DDB, queue is a string
         """
         if type(self.queue) == str:
             self.queue = ast.literal_eval(self.queue)
@@ -74,7 +111,6 @@ class Player(Entry):
     gid: str            # FK: What game is the player in?
     name: str           # What is the name of the player?
     team: str = None    # What team is the player on?  "a" or "b"
-    table: str = "player"
 
 
 @dataclass
@@ -83,7 +119,6 @@ class Word(Entry):
     pid: str            # FK: What player submitted the word?
     gid: str            # FK: What game is the word in?
     word: str           # The actual word
-    table: str = "word"
 
 
 @dataclass
@@ -95,8 +130,5 @@ class Attempt(Entry):
     round: int      # What round did this attempt occur in?
     success: bool   # Did the team guessing get the point? None if no point
     seconds: int    # How long did the attempt last?
-    table: str = "attempt"
-
-
 
 

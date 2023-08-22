@@ -4,18 +4,80 @@ import random
 import json
 from typing import List, Tuple, Union, Dict
 import copy
+import boto3
 import sqlite3
 import ast
 from collections import defaultdict
 
 from model import Entry, Game, Player, Word, Attempt
 
-root_dir = os.path.dirname(os.path.abspath(__file__))
-conn = sqlite3.connect(os.path.join(root_dir,"data","salad.db"), check_same_thread=False)
+TABLE_NAME = "web-salad-table"
+INDEX_NAME = "gid-type-index"
+
+ddb = boto3.client("dynamodb")
+
+
+def ddb_to_fields(item):
+    """
+    Convert from DynamoDB dict with types nested to flat dict
+    """
+    t = {}
+
+    for k, v in item.items():
+        for vk in v:
+            if vk == "N":
+                t[k] = int(v[vk])
+            else:
+                t[k] = v[vk]
+    
+    del t["type"]
+    return t
+
 
 #######################################
 # Generic Database Interaction
 #######################################
+
+def get_entry_temp(entry_id: str, entry_type: type) -> Entry:
+    res = ddb.get_item(TableName=TABLE_NAME, Key={"id": {"S": entry_id}})
+
+    if "Item" in res:
+        return entry_type(**ddb_to_fields(res["Item"]))
+    else:
+        return None
+
+
+def edit_entry_temp(ent: str, typ):
+
+    # TODO: check for existence first
+    alpha = string.ascii_lowercase
+    i = 0
+
+    expr = []
+    names = {}
+    values = {}
+
+    update_dict = ent.to_ddb_dict()
+    id_str = update_dict.pop("id")
+
+    for name, value in update_dict.items():
+        nk = "#" + alpha[i]
+        vk = ":" + alpha[i+1]
+
+        expr.append(nk + "=" + vk)
+        names[nk] = name
+        values[vk] = value
+
+        i += 2
+
+    expr = "set " + ", ".join(expr)
+
+    res = ddb.update_item(TableName=TABLE_NAME,
+                          Key={"id": id_str},
+                          UpdateExpression=expr,
+                          ExpressionAttributeNames=names,
+                          ExpressionAttributeValues=values)
+
 
 
 def entry_exists_by_obj(entry: Entry) -> bool:
