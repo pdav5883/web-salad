@@ -29,8 +29,10 @@ def ddb_to_fields(item):
                 t[k] = int(v[vk])
             else:
                 t[k] = v[vk]
+
+    if "type" in t:
+        del t["type"]
     
-    del t["type"]
     return t
 
 
@@ -38,7 +40,10 @@ def ddb_to_fields(item):
 # Generic Database Interaction
 #######################################
 
-def get_entry_temp(entry_id: str, entry_type: type) -> Entry:
+def get_entry_by_id(entry_id: str, entry_type: type) -> Entry:
+    """
+    Returns None if object does not exist
+    """
     res = ddb.get_item(TableName=TABLE_NAME, Key={"id": {"S": entry_id}})
 
     if "Item" in res:
@@ -47,9 +52,23 @@ def get_entry_temp(entry_id: str, entry_type: type) -> Entry:
         return None
 
 
-def edit_entry_temp(ent: str, typ):
+def entry_exists_by_id(entry_id: str) -> bool:
+    res = ddb.get_item(TableName=TABLE_NAME, Key={"id": {"S": entry_id}})
 
-    # TODO: check for existence first
+    if "Item" in res:
+        return True
+    else:
+        return False
+
+
+def entry_exists_by_ojb(entry: Entry) -> bool:
+    return entry_exists_by_id(entry.id)
+
+
+def update_entry(entry: Entry):
+    """
+    Return True if update successful
+    """
     alpha = string.ascii_lowercase
     i = 0
 
@@ -57,7 +76,7 @@ def edit_entry_temp(ent: str, typ):
     names = {}
     values = {}
 
-    update_dict = ent.to_ddb_dict()
+    update_dict = entry.get_ddb_dict()
     id_str = update_dict.pop("id")
 
     for name, value in update_dict.items():
@@ -72,41 +91,21 @@ def edit_entry_temp(ent: str, typ):
 
     expr = "set " + ", ".join(expr)
 
-    res = ddb.update_item(TableName=TABLE_NAME,
-                          Key={"id": id_str},
-                          UpdateExpression=expr,
-                          ExpressionAttributeNames=names,
-                          ExpressionAttributeValues=values)
+    names["#id"] = "id"
+    values[":id"] = id_str
 
-
-
-def entry_exists_by_obj(entry: Entry) -> bool:
-    """
-    Checks if the ID of the proposed entry already exists in the DB
-    """
-    query = f"SELECT 1 FROM {entry.table} WHERE id = '{entry.id}'"
-    return True if conn.execute(query).fetchone() else False
-
-
-def entry_exists_by_id(entry_id: str, entry_type: type) -> bool:
-    """
-    Checks if the ID already exists in the DB
-    """
-    query = f"SELECT 1 FROM {entry_type.table} WHERE id = '{entry_id}'"
-    return True if conn.execute(query).fetchone() else False
-
-
-def get_entry_by_id(entry_id: str, entry_type: type) -> Entry:
-    """
-    Return the entry with given id in given table. None if entry does not exist
-    """
-    query = f"SELECT * FROM {entry_type.table} WHERE id = '{entry_id}'"
-    res = conn.execute(query).fetchone()
-
-    if res:
-        return entry_type(*res)
-    else:
-        return None
+    try:
+        res = ddb.update_item(TableName=TABLE_NAME,
+                              Key={"id": id_str},
+                              UpdateExpression=expr,
+                              ConditionExpression="#id=:id",
+                              ExpressionAttributeNames=names,
+                              ExpressionAttributeValues=values)
+        return True
+    
+    except ddb.exceptions.ConditionalCheckFailedException:
+        print(f"Entry with id {entry.id} does not exist")
+        return False
 
 
 def add_entry(entry: Entry) -> bool:
@@ -139,24 +138,7 @@ def add_entries(entries: List[Entry]) -> bool:
     conn.commit()
     return True
 
-
-def update_entry(entry: Entry) -> bool:
-    """
-    Update an entry in the database with new values, return whether update was success
-    """
-    if not entry_exists_by_obj(entry):
-        print(f"Entry in {entry.table} with id {entry.id} does not exist")
-        return False
-
-    col_list, val_list = entry.get_attr_rep_lists()
-    set_str = ",".join([f"{col} = {val}" for col, val in zip(col_list, val_list)])
-
-    query = f"UPDATE {entry.table} SET {set_str} WHERE id = '{entry.id}'"
-    conn.execute(query)
-    conn.commit()
-    return True
-
-
+    
 def update_entries(entries: List[Entry]) -> bool:
     """
     Update a list of entries in the correct DB table. Commit and return bool if all successful
