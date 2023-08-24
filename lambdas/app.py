@@ -138,9 +138,11 @@ def wait_for_players():
 
     player_ids = [player.id for player in players]
 
-    player_names = [player.name for player in players]
-    player_status = get_players_ready_by_game_id(gid, player_ids)
-    names_ready = list(zip(player_names, player_status))
+    #player_names = [player.name for player in players]
+    #player_status = get_players_ready_by_game_id(gid, player_ids)
+    #names_ready = list(zip(player_names, player_status))
+    
+    names_ready = [(p.name, p.ready) for p in players]
 
     captain_name = captain.name
     is_captain = (pid == captain.id)

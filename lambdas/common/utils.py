@@ -17,27 +17,8 @@ INDEX_NAME = "gid-type-index"
 ddb = boto3.client("dynamodb")
 
 
-def ddb_to_fields(item):
-    """
-    Convert from DynamoDB dict with types nested to flat dict
-    """
-    t = {}
-
-    for k, v in item.items():
-        for vk in v:
-            if vk == "N":
-                t[k] = int(v[vk])
-            else:
-                t[k] = v[vk]
-
-    if "type" in t:
-        del t["type"]
-    
-    return t
-
-
 #######################################
-# Generic Database Interaction
+# Database Interaction
 #######################################
 
 def get_entry_by_id(entry_id: str, entry_type: type) -> Entry:
@@ -104,84 +85,127 @@ def update_entry(entry: Entry):
         return True
     
     except ddb.exceptions.ConditionalCheckFailedException:
-        print(f"Entry with id {entry.id} does not exist")
+        print(f"Update Entry Error: Entry with id {entry.id} does not exist")
         return False
 
 
 def add_entry(entry: Entry) -> bool:
     """
-    Insert an entry into the correct DB table. Return True if entry successful
+    Return True if successful
     """
-    if entry_exists_by_obj(entry):
-        print(f"Entry in {entry.table} with id {entry.id} already exists")
-        return False
+    alpha = string.ascii_lowercase
+    i = 0
 
-    query = f"INSERT INTO {entry.table} VALUES {entry.__str__()}"
-    conn.execute(query)
-    conn.commit()
-    return True
+    expr = []
+    names = {}
+    values = {}
+
+    update_dict = entry.get_ddb_dict()
+    id_str = update_dict.pop("id")
+
+    for name, value in update_dict.items():
+        nk = "#" + alpha[i]
+        vk = ":" + alpha[i+1]
+
+        expr.append(nk + "=" + vk)
+        names[nk] = name
+        values[vk] = value
+
+        i += 2
+
+    expr = "set " + ", ".join(expr)
+
+    names["#id"] = "id"
+
+    try:
+        res = ddb.put_item(TableName=TABLE_NAME,
+                           Key={"id": id_str},
+                           UpdateExpression=expr,
+                           ConditionExpression="attibute_not_exists(#id)",
+                           ExpressionAttributeNames=names,
+                           ExpressionAttributeValues=values)
+        return True
+    
+    except ddb.exceptions.ConditionalCheckFailedException:
+        print(f"Add Entry Error: Entry with id {entry.id} already exists")
+        return False
 
 
 def add_entries(entries: List[Entry]) -> bool:
     """
-    Insert a list of entries into the correct DB table. Commit and return bool if all successful
+    Insert a list of entries into the table. Return True if all successful
     """
+    success = True
+
     for entry in entries:
-        if entry_exists_by_obj(entry):
-            print(f"Entry in {entry.table} with id {entry.id} already exists...rolling back previous additions")
-            conn.rollback()
-            return False
+        success = success and add_entry(entry)
 
-        query = f"INSERT INTO {entry.table} VALUES {entry.__str__()}"
-        conn.execute(query)
-
-    conn.commit()
-    return True
+    return success
 
     
 def update_entries(entries: List[Entry]) -> bool:
     """
-    Update a list of entries in the correct DB table. Commit and return bool if all successful
+    Update a list of entries in the DB table. Return True if all successful
     """
+    success = True
+
     for entry in entries:
-        if not entry_exists_by_obj(entry):
-            print(f"Entry in {entry.table} with id {entry.id} does not exist...rolling back previous updates")
-            conn.rollback()
-            return False
+        success = success and update_entry(entry)
 
-        col_list, val_list = entry.get_attr_rep_lists()
-        set_str = ",".join([f"{col} = {val}" for col, val in zip(col_list, val_list)])
+    return success
 
-        query = f"UPDATE {entry.table} SET {set_str} WHERE id = '{entry.id}'"
-        conn.execute(query)
 
-    conn.commit()
-    return True
+def get_entries_by_gid_type(gid: str, entry_type: type, filters: dict = None) -> List[Entry]:
+    """
+    Query global index for all entries of specific type
 
+    Optional filters: dict of attr/val equality filters
+    """
+    query_expr = "#G = :g AND #T = :t"
+    attr_names = {"#G": "gid", "#T": "type"}
+    attr_values = {":g": {"S": gid}, ":t": {"S": entry_type.type}}
+
+    if filters:
+        #WORKING
+    else:
+        filter_expr = "" # TODO: make sure this has no impact
+    res = ddb.query(TableName=TABLE_NAME, IndexName=INDEX_NAME,
+                    KeyConditionExpression=query_expr,
+                    FilterExpression=filter_expr
+                    ExpressionAttributeNames=attr_names,
+                    ExpressionAttributeValues=attr_values)
+
+    return [entry_type(**ddb_to_fields(item)) for item in res["Items"]]
+
+        
 
 #######################################
 # Back-End Methods
 #######################################
 
 
-def auth_game(req) -> bool:
+def auth_game(event) -> bool:
     """
     Check cookies for game ID
     """
+    cookies = parse_cookies(event.get("cookies", {}))
     gid = req.cookies.get("gid", None)
+    
     if gid:
-        return entry_exists_by_id(gid, Game)
+        return entry_exists_by_id(gid)
     else:
         return False
 
 
-def auth_player(req) -> bool:
+def auth_player(event) -> bool:
     """
-    Check cookies for valid player ID
+    Check cookies for player ID
     """
+    cookies = parse_cookies(event.get("cookies", {}))
     pid = req.cookies.get("pid", None)
+    
     if pid:
-        return entry_exists_by_id(pid, Player)
+        return entry_exists_by_id(pid)
     else:
         return False
 
@@ -190,46 +214,27 @@ def get_players_by_game_id(gid: str) -> List[Player]:
     """
     Get all the players in this game
     """
-    query = f"SELECT * FROM player WHERE gid = '{gid}'"
-    return [Player(*res) for res in conn.execute(query).fetchall()]
+    return get_entries_by_gid_type(gid, Player) 
 
 
 def get_captain_by_game_id(gid: str) -> Player:
     """
     The captain of the game
     """
-    query = f"SELECT player.* FROM player " \
-        f"INNER JOIN game ON game.id = player.gid " \
-        f"WHERE game.id = '{gid}' AND player.id = game.captain_id"
-    res = conn.execute(query).fetchone()
+    game = get_entry_by_id(gid, Game)
 
-    if res:
-        return Player(*res)
+    
+    if game:
+        return get_entry_by_id(game.captain_id, Player)
     else:
         return None
-
-
-def get_players_ready_by_game_id(gid: str, pids: List[str]) -> List[bool]:
-    """
-    Return a list of whether each player has submitted words
-    """
-    query = f"SELECT DISTINCT pid FROM word WHERE gid = '{gid}'"
-    ready_players = [res[0] for res in conn.execute(query).fetchall()]
-
-    ready = []
-
-    for pid in pids:
-        ready.append(pid in ready_players)
-
-    return ready
 
 
 def player_exists_by_name_game_id(gid: str, name: str) -> bool:
     """
     Return whether a player with given name already exists in the game
     """
-    query = f"SELECT 1 FROM player WHERE gid = '{gid}' AND name = '{name}'"
-    return True if conn.execute(query).fetchone() else False
+    players = #WORKING 
 
 
 def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
@@ -244,7 +249,7 @@ def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
 
     return teams["a"], teams["b"]
 
-
+#TODO
 def get_words_remaining(gid: str) -> List[Word]:
     """
     Get a list of Words that have not yet been used in the current round
@@ -269,15 +274,9 @@ def get_attempts_by_game_id(gid: str) -> List[Attempt]:
     """
     All the attempts that have happened in this game
     """
-    query = f"SELECT * FROM attempt WHERE gid = '{gid}'"
+    return get_entries_by_gid_type(gid, Attempt)
 
-    attempts = list()
-    for attempt_args in conn.execute(query):
-        attempts.append(Attempt(*attempt_args))
-
-    return attempts
-
-
+#TODO
 def get_point_attempts_by_team_by_game_id(gid: str) -> Tuple[List[Attempt], List[Attempt]]:
     """
     Organize attempts that resulted in a point by team. Team A is first, Team B is second
@@ -303,7 +302,7 @@ def get_point_attempts_by_team_by_game_id(gid: str) -> Tuple[List[Attempt], List
 
     return attempts_a, attempts_b
 
-
+#TODO
 def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
     """
     Return total scores for team A and team B
@@ -326,7 +325,7 @@ def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
 
     return score_a, score_b
 
-
+#TODO
 def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
     """
         Return total scores for team A and team B as a list by round
@@ -350,7 +349,7 @@ def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
 
     return score_a, score_b
 
-
+#TODO
 def get_team_stats(gid: str, team: str) -> List[Tuple[str, int, int, int, int]]:
     """
     Return a list of tuples with stats for a full team. Each entry in list corresponds to player. List is sorted by
@@ -382,7 +381,7 @@ def get_team_stats(gid: str, team: str) -> List[Tuple[str, int, int, int, int]]:
 
     return player_data
 
-
+#TODO
 def get_word_stats(gid: str) -> List[Tuple[str, int, int, int, int]]:
     """
     Each entry in list is tuple of word data. Tuple contains word str, r1 time, r2 time, r3 time, avg time. List is
@@ -420,19 +419,49 @@ def get_word_stats(gid: str) -> List[Tuple[str, int, int, int, int]]:
     return word_data
 
 
+#######################################
+# Common Utilities
+#######################################
+
 def create_rand_id(n=10) -> str:
     chars = string.ascii_uppercase
     return "".join(random.choice(chars) for _ in range(n))
+
+
+def ddb_to_fields(item):
+    """
+    Convert from DynamoDB dict with types nested to flat dict
+    """
+    t = {}
+
+    for k, v in item.items():
+        for vk in v:
+            if vk == "N":
+                t[k] = int(v[vk])
+            else:
+                t[k] = v[vk]
+
+    if "type" in t:
+        del t["type"]
+    
+    return t
+
+
+def parse_cookies(cookie_str_list):
+    """
+    Input is cookie_str_list = ["cookie1=val1", "cookie2=val2"]
+    """
+    return dict(cookie_str.replace(" ","").split("=") for cookie_str in cookie_str_list)
+
 
 
 def bump_player_queue(queue: List[List[str]]) -> List[List[str]]:
     """
     Increment the player queue.
 
-    Queue is input/output as a string rep of a List[List[str]] of player ids. Must be in string format for SQLite
-    storage.
+    Queue is input/output as a string rep of a List[List[str]] of player ids.
 
-    Return the current player, next player, and new queue
+    Return the new queue
     """
     q = copy.deepcopy(queue)
     current_team = q.pop(0)

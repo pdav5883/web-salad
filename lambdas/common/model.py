@@ -65,6 +65,7 @@ class Player(Entry):
     gid: str            # FK: What game is the player in?
     name: str           # What is the name of the player?
     team: str = None    # What team is the player on?  "a" or "b"
+    ready: bool = False # Whether they player has submitted words
     type: str = "player"
 
 
@@ -74,6 +75,9 @@ class Word(Entry):
     pid: str            # FK: What player submitted the word?
     gid: str            # FK: What game is the word in?
     word: str           # The actual word
+    r1_done: bool = False # Whether this word has been guessed in r1
+    r2_done: bool = False # Whether this word has been guessed in r2
+    r3_done: bool = False # Whether this word has been guessed in r3
     type: str = "word"
 
 
@@ -86,6 +90,7 @@ class Attempt(Entry):
     round: int      # What round did this attempt occur in?
     success: bool   # Did the team guessing get the point? None if no point
     seconds: int    # How long did the attempt last?
+    team: str       # Which team made this attempt
     type: str = "attempt"
 
 
