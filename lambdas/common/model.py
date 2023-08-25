@@ -88,7 +88,8 @@ class Attempt(Entry):
     pid: str        # FK: What player was giving the clue?
     gid: str        # FK: What game did the attempt occur in?
     round: int      # What round did this attempt occur in?
-    success: bool   # Did the team guessing get the point? None if no point
+    success: bool   # Did the team guessing get the point?
+    point: bool     # Did the attempt result in a point?
     seconds: int    # How long did the attempt last?
     team: str       # Which team made this attempt
     type: str = "attempt"

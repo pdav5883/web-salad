@@ -161,19 +161,38 @@ def get_entries_by_gid_type(gid: str, entry_type: type, filters: dict = None) ->
 
     Optional filters: dict of attr/val equality filters
     """
-    query_expr = "#G = :g AND #T = :t"
+    query_expr = "#G = :gg AND #T = :tt"
     attr_names = {"#G": "gid", "#T": "type"}
-    attr_values = {":g": {"S": gid}, ":t": {"S": entry_type.type}}
+    attr_values = {":gg": {"S": gid}, ":tt": {"S": entry_type.type}}
 
     if filters:
-        #WORKING
+        filter_expr = []
+        alpha = string.ascii_lowercase
+        i = 0
+
+        for k, v in to_ddb_format(filters).items():
+            nk = "#" + alpha[i]
+            vk = ":" + alpha[i+1]
+
+            filter_expr.append(nk + " = " + vk)
+            attr_names[nk] = k
+            attr_values[vk] = v
+
+        filter_expr = " AND ".join(filter_expr)
+
+        # wrap in kwargs to allow function to work without filters
+        # hack is necessary b/c there is no "no filter" arg
+        #  for FilterExpression if it is present
+        kwargs = {"FilterExpression": filter_expr}
+
     else:
-        filter_expr = "" # TODO: make sure this has no impact
+        kwargs = {}
+
     res = ddb.query(TableName=TABLE_NAME, IndexName=INDEX_NAME,
                     KeyConditionExpression=query_expr,
-                    FilterExpression=filter_expr
                     ExpressionAttributeNames=attr_names,
-                    ExpressionAttributeValues=attr_values)
+                    ExpressionAttributeValues=attr_values,
+                    **kwargs)
 
     return [entry_type(**ddb_to_fields(item)) for item in res["Items"]]
 
@@ -234,7 +253,10 @@ def player_exists_by_name_game_id(gid: str, name: str) -> bool:
     """
     Return whether a player with given name already exists in the game
     """
-    players = #WORKING 
+    if get_entries_by_gid_type(gid, Player, {"name": name}):
+        return True
+    else
+        return False
 
 
 def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
@@ -249,25 +271,14 @@ def get_teams_by_game_id(gid: str) -> Tuple[List[str], List[str]]:
 
     return teams["a"], teams["b"]
 
-#TODO
+
 def get_words_remaining(gid: str) -> List[Word]:
     """
     Get a list of Words that have not yet been used in the current round
     """
-    query = f"SELECT word.* FROM word " \
-        f"WHERE word.gid = '{gid}' " \
-        f"AND NOT EXISTS " \
-        f"(SELECT 1 FROM attempt " \
-        f"INNER JOIN game ON game.id = attempt.gid " \
-        f"WHERE attempt.wid = word.id " \
-        f"AND game.round = attempt.round " \
-        f"AND attempt.success IS NOT NULL);"
+    game = get_entry_by_id(gid, Game)
 
-    words = list()
-    for word_args in conn.execute(query):
-        words.append(Word(*word_args))
-
-    return words
+    return get_entries_by_gid_type(gid, Word, {"r" + game.round + "_done": False})
 
 
 def get_attempts_by_game_id(gid: str) -> List[Attempt]:
@@ -276,61 +287,36 @@ def get_attempts_by_game_id(gid: str) -> List[Attempt]:
     """
     return get_entries_by_gid_type(gid, Attempt)
 
-#TODO
-def get_point_attempts_by_team_by_game_id(gid: str) -> Tuple[List[Attempt], List[Attempt]]:
-    """
-    Organize attempts that resulted in a point by team. Team A is first, Team B is second
-    """
-    query_a = f"SELECT attempt.* FROM attempt " \
-        f"INNER JOIN player ON player.id = attempt.pid " \
-        f"WHERE attempt.gid = '{gid}' " \
-        f"AND attempt.success IS NOT NULL " \
-        f"AND player.team = 'a'"
-    query_b = f"SELECT attempt.* FROM attempt " \
-        f"INNER JOIN player ON player.id = attempt.pid " \
-        f"WHERE attempt.gid = '{gid}' " \
-        f"AND attempt.success IS NOT NULL " \
-        f"AND player.team = 'b'"
+#
+#def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
+#    """
+#    Return total scores for team A and team B
+#    """
+#    attempts_a, attempts_b = get_point_attempts_by_team_by_game_id(gid)
+#
+#    score_a = score_b = 0
+#
+#    for attempt in attempts_a:
+#        if attempt.success:
+#            score_a += 1
+#        else:
+#            score_b += 1
+#
+#    for attempt in attempts_b:
+#        if attempt.success:
+#            score_b += 1
+#        else:
+#            score_a += 1
+#
+#    return score_a, score_b
 
-    attempts_a = list()
-    for attempt_args in conn.execute(query_a):
-        attempts_a.append(Attempt(*attempt_args))
 
-    attempts_b = list()
-    for attempt_args in conn.execute(query_b):
-        attempts_b.append(Attempt(*attempt_args))
-
-    return attempts_a, attempts_b
-
-#TODO
-def get_scores_by_game_id(gid: str) -> Tuple[int, int]:
-    """
-    Return total scores for team A and team B
-    """
-    attempts_a, attempts_b = get_point_attempts_by_team_by_game_id(gid)
-
-    score_a = score_b = 0
-
-    for attempt in attempts_a:
-        if attempt.success:
-            score_a += 1
-        else:
-            score_b += 1
-
-    for attempt in attempts_b:
-        if attempt.success:
-            score_b += 1
-        else:
-            score_a += 1
-
-    return score_a, score_b
-
-#TODO
 def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
     """
         Return total scores for team A and team B as a list by round
         """
-    attempts_a, attempts_b = get_point_attempts_by_team_by_game_id(gid)
+    attempts_a = get_entries_by_gid_type(gid, Attempt, {"team": "a", "point": True})
+    attempts_b = get_entries_by_gid_type(gid, Attempt, {"team": "b", "point": True})
 
     score_a = 3 * [0]
     score_b = 3 * [0]
@@ -341,7 +327,7 @@ def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
         else:
             score_b[attempt.round - 1] += 1
 
-    for attempt in attempts_b:
+    for attempt in success_attempts_b:
         if attempt.success:
             score_b[attempt.round - 1] += 1
         else:
@@ -377,7 +363,7 @@ def get_team_stats(gid: str, team: str) -> List[Tuple[str, int, int, int, int]]:
     total_r3 = sum([x[3] for x in player_data])
     total = total_r1 + total_r2 + total_r3
 
-    player_data.append(("Total", total_r1, total_r2, total_r3, total))
+    #return to_dictplayer_data.append(("Total", total_r1, total_r2, total_r3, total))
 
     return player_data
 
@@ -445,6 +431,28 @@ def ddb_to_fields(item):
         del t["type"]
     
     return t
+
+
+def to_ddb_format(from_dict):
+    """
+    Convert dict to dynamodb format
+    {"strkey": strval, "numkey": numval, "boolkey": boolval}
+    -->
+    {"strkey": {"S": strval}, "numkey": {"N": ...}}
+    """
+    to_dict = {}
+
+    for k, v in from_dict.items():
+        if type(v) in (int, float):
+                to_dict[k] = {"N": str(v)}
+        elif type(v) == bool:
+                to_dict[k] = {"BOOL": v}
+        elif type(v) == str:
+                to_dict[k] = {"S": v}
+        else:
+            raise TypeError(f"Invalid type {type(v)} for key {k}")
+
+    return to_dict
 
 
 def parse_cookies(cookie_str_list):
