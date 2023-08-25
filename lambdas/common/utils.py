@@ -9,7 +9,7 @@ import sqlite3
 import ast
 from collections import defaultdict
 
-from model import Entry, Game, Player, Word, Attempt
+from common.model import Entry, Game, Player, Word, Attempt
 
 TABLE_NAME = "web-salad-table"
 INDEX_NAME = "gid-type-index"
@@ -255,7 +255,7 @@ def player_exists_by_name_game_id(gid: str, name: str) -> bool:
     """
     if get_entries_by_gid_type(gid, Player, {"name": name}):
         return True
-    else
+    else:
         return False
 
 
