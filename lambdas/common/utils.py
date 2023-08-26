@@ -203,26 +203,20 @@ def get_entries_by_gid_type(gid: str, entry_type: type, filters: dict = None) ->
 #######################################
 
 
-def auth_game(event) -> bool:
+def auth_game(gid) -> bool:
     """
-    Check cookies for game ID
+    Check for game ID
     """
-    cookies = parse_cookies(event.get("cookies", {}))
-    gid = req.cookies.get("gid", None)
-    
     if gid:
         return entry_exists_by_id(gid)
     else:
         return False
 
 
-def auth_player(event) -> bool:
+def auth_player(pid) -> bool:
     """
-    Check cookies for player ID
+    Check for player ID
     """
-    cookies = parse_cookies(event.get("cookies", {}))
-    pid = req.cookies.get("pid", None)
-    
     if pid:
         return entry_exists_by_id(pid)
     else:
