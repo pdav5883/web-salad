@@ -93,37 +93,10 @@ def add_entry(entry: Entry) -> bool:
     """
     Return True if successful
     """
-    alpha = string.ascii_lowercase
-    i = 0
-
-    expr = []
-    names = {}
-    values = {}
-
-    update_dict = entry.get_ddb_dict()
-    id_str = update_dict.pop("id")
-
-    for name, value in update_dict.items():
-        nk = "#" + alpha[i]
-        vk = ":" + alpha[i+1]
-
-        expr.append(nk + "=" + vk)
-        names[nk] = name
-        values[vk] = value
-
-        i += 2
-
-    expr = "set " + ", ".join(expr)
-
-    names["#id"] = "id"
-
     try:
         res = ddb.put_item(TableName=TABLE_NAME,
-                           Key={"id": id_str},
-                           UpdateExpression=expr,
-                           ConditionExpression="attibute_not_exists(#id)",
-                           ExpressionAttributeNames=names,
-                           ExpressionAttributeValues=values)
+                           Item=entry.get_ddb_dict(),
+                           ConditionExpression="attribute_not_exists(id)")
         return True
     
     except ddb.exceptions.ConditionalCheckFailedException:

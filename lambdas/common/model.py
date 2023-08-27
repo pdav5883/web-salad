@@ -15,6 +15,9 @@ class Entry:
 
         for attr, typ in attrs.items():
             val = self.__getattribute__(attr)
+
+            if val is None:
+                continue
             
             if typ == int:
                 t[attr] = {"N": str(val)}

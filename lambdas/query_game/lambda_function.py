@@ -17,9 +17,6 @@ Endpoint for
 
 
 def lambda_handler(event, context):
-    """
-    Param "t" contains "getendgame", "getgame", etc
-    """
     params = event.get("queryStringParameters", {})
     cookies = utils.parse_cookies(event.get("cookies", {}))
 

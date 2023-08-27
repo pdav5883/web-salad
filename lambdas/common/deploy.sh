@@ -19,3 +19,6 @@ version=$(aws lambda list-layer-versions --layer-name web-salad-common | python3
 
 # update lambdas to use new layer
 aws lambda update-function-configuration --function-name SaladQueryGame --layers $version
+aws lambda update-function-configuration --function-name SaladBuildGame --layers $version
+aws lambda update-function-configuration --function-name SaladPlayGame --layers $version
+
