@@ -245,7 +245,7 @@ def get_words_remaining(gid: str) -> List[Word]:
     """
     game = get_entry_by_id(gid, Game)
 
-    return get_entries_by_gid_type(gid, Word, {"r" + game.round + "_done": False})
+    return get_entries_by_gid_type(gid, Word, {"r" + str(game.round) + "_done": False})
 
 
 def get_attempts_by_game_id(gid: str) -> List[Attempt]:
@@ -294,7 +294,7 @@ def get_scores_by_round_by_game_id(gid: str) -> Tuple[List[int], List[int]]:
         else:
             score_b[attempt.round - 1] += 1
 
-    for attempt in success_attempts_b:
+    for attempt in attempts_b:
         if attempt.success:
             score_b[attempt.round - 1] += 1
         else:

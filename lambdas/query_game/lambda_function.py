@@ -150,7 +150,7 @@ def get_scoreboard(params, cookies):
 
     myturn = (pid == curr_id)
 
-    data = {"complete": False, "gid": gid, "myturn": myturn, "status": status,
+    data = {"complete": False, "gid": gid, "myturn": myturn, "status": game_status,
             "scores": scores, "teams": teams}
 
     return {"statusCode": 200,
