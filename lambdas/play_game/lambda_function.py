@@ -92,6 +92,12 @@ def submit_turn(params, cookies):
     
     utils.add_entries(attempts)
 
+    # mark words as done for this round
+    for wid, point in zip(attempt_wids, attempt_point):
+        word = utils.get_entry_by_id(wid, model.Word)
+        setattr(word, f"r{game.round}_done", True)
+        utils.update_entry(word)
+
     if time_remaining > 0:
         # the game is over!
         if game.round == 3:
@@ -100,13 +106,13 @@ def submit_turn(params, cookies):
 
         # move to the next round, same person's turn with the balance of their time multiplied by ratio of round times
         else:
-            time_prev_round = game.__getattribute__(f"r{game.round}_sec")
-            time_next_round = game.__getattribute__(f"r{game.round + 1}_sec")
+            time_prev_round = getattr(game, f"r{game.round}_sec")
+            time_next_round = getattr(game, f"r{game.round + 1}_sec")
             game.round += 1
             game.time_remaining = int(time_remaining * time_next_round / time_prev_round)
 
     else:
-        game.time_remaining = game.__getattribute__(f"r{game.round}_sec")
+        game.time_remaining = getattr(game, f"r{game.round}_sec")
         game.queue = utils.bump_player_queue(game.queue)
 
     utils.update_entry(game)

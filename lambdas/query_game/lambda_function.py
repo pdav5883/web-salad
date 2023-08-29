@@ -137,7 +137,7 @@ def get_scoreboard(params, cookies):
     if len(team_a) > len(team_b):
         team_b.append("")
     teams = list(zip(team_a, team_b))
-    
+
     scores_a, scores_b = utils.get_scores_by_round_by_game_id(gid)
     scores = {"r1a": scores_a[0] or "-",
               "r1b": scores_b[0] or "-",

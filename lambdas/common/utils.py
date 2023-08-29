@@ -151,6 +151,8 @@ def get_entries_by_gid_type(gid: str, entry_type: type, filters: dict = None) ->
             attr_names[nk] = k
             attr_values[vk] = v
 
+            i += 2
+
         filter_expr = " AND ".join(filter_expr)
 
         # wrap in kwargs to allow function to work without filters
