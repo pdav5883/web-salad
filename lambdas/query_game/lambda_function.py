@@ -41,6 +41,7 @@ def get_version(params, cookies):
     data = {"version": _version.__version__}
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps(data)}
     
 
@@ -68,6 +69,7 @@ def get_game(params, cookies):
 
     return {"statusCode": 200,
             "cookies": [f"gid={gid}"],
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": f"Found game with gid '{gid}'"})}
     
 

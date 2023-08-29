@@ -72,6 +72,9 @@ Trying for minimal touch refactor rather than rebuild of back-end, there are 10 
 - To set a cookie put "cookies": ["cookiename1=cookievalue1", "cookiename2=cookievalue2"] as a field in response dict
 - To get a cookie look in "cookies" field in event variable. Will come in same format as above, so will need to parse into dict.
 
+### A note on response format
+In API gateway have to use the full response format (i.e. with body, statusCode) since cookies are often returned and I need control of what error code is returned. This means that the content-type needs to be manually set in order for the client to automatically parse the body as an object
+
 ## Local Execution (i.e. not available over internet)
 Create a virtualenv with `python >= 3.7` and `flask` installed. Execute `flask run` to serve the app at `localhost:5000`. Use any web browser to navigate to this location from the local machine.
 
