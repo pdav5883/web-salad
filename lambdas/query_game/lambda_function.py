@@ -68,7 +68,7 @@ def get_game(params, cookies):
                 "body": json.dumps({"message": f"Game with gid '{gid}' has already started"})}
 
     return {"statusCode": 200,
-            "cookies": [f"gid={gid}"],
+            "cookies": [f"gid={gid}; SameSite=None; Secure"],
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": f"Found game with gid '{gid}'"})}
     

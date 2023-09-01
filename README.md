@@ -75,6 +75,9 @@ Trying for minimal touch refactor rather than rebuild of back-end, there are 10 
 ### A note on response format
 In API gateway have to use the full response format (i.e. with body, statusCode) since cookies are often returned and I need control of what error code is returned. This means that the content-type needs to be manually set in order for the client to automatically parse the body as an object
 
+### A note on cookies
+Getting cookies to work between CORS restrictions and browser restrictions has proven to be a huge pain. CORS requires explicit domain information of script (i.e. salad.bearloves.rocks), so makes it much harder to test on localhost. Browser restrictions are in place to reject third party cookies, and I can't quite get it working the way I want. So...I'm going to get rid of cookies and put the gid/pid information stored there into sessionStorage instead, then have the client send that info in the query string rather than in the cookie. Will require some minor changes to the API and lambdas, but this is WAY easier than trying to get cross-domain cookies working.
+
 ## Local Execution (i.e. not available over internet)
 Create a virtualenv with `python >= 3.7` and `flask` installed. Execute `flask run` to serve the app at `localhost:5000`. Use any web browser to navigate to this location from the local machine.
 

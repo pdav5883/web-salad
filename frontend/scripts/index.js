@@ -12,6 +12,8 @@ function joingame() {
     type: "GET",
     url: api_url_getgame,
     data: {"gid": gid},
+    crossDomain: true,
+    xhrFields: {withCredentials: true},
 
     success: function() {
       // go to new page
