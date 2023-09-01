@@ -45,6 +45,7 @@ def prepare_turn(params):
     # make sure pid matches current turn
     if pid != game.queue[0][0]:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "data": json.dumps({"myturn": False})}
 
     words = utils.get_words_remaining(gid)
@@ -56,6 +57,7 @@ def prepare_turn(params):
     data = {"myturn": True, "gid": gid, "wids": wids, "words": word_strs, "time_remaing": time_remaining}
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps(data)}
 
 

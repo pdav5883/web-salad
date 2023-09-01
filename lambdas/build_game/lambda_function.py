@@ -91,6 +91,7 @@ def submit_player(params):
         utils.update_entry(game)
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"pid": player.id})}
 
    
@@ -143,22 +144,26 @@ def prepare_game(params):
 
     if game.started:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"goto": "scoreboard"})}
 
     if game.captain_id != this_player.id:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"goto": "roster",
                                     "message": "You are not the captain"})}
 
     # don't let the game start with just one player
     if len(players) <= 1:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"goto": "roster",
                                     "message": "Wait for another player"})}
 
     # don't let the game start if everyone not ready
     if not all([player.ready for player in players]):
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"goto": "roster",
                                     "message": "Not everyone is ready"})}
  
@@ -215,5 +220,6 @@ def prepare_game(params):
     utils.update_entries(players_post)
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"goto": "scoreboard"})}
 

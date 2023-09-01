@@ -87,6 +87,7 @@ def get_roster(params):
 
     if game.started:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"started": True})}
 
     players = utils.get_players_by_game_id(gid)
@@ -100,6 +101,7 @@ def get_roster(params):
             "is_captain": is_captain, "captain_name": captain_name}
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps(data)}
 
 
@@ -118,6 +120,7 @@ def get_scoreboard(params):
     
     if game.complete:
         return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({"complete": True})}
 
     curr_id = game.queue[0][0]
@@ -154,6 +157,7 @@ def get_scoreboard(params):
             "scores": scores, "teams": teams}
 
     return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps(data)}
     
 
