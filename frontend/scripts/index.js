@@ -13,16 +13,16 @@ function joingame() {
     url: api_url_getgame,
     data: {"gid": gid},
     crossDomain: true,
-    xhrFields: {withCredentials: true},
 
-    success: function() {
-      // go to new page
-      // TODO: cookie is not setting
+    success: function(data) {
+      $("#statustext").html("")
+      sessionStorage.setItem("gid", gid)
+      window.location.href = "newplayer.html"
     },
 
     error: function(err) {
       const message = JSON.parse(err.responseText).message
-      // display error message
+      $("#statustext").html(message)
     }
   })
 }

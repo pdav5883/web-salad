@@ -8,34 +8,33 @@ from common import _version
 """
 Endpoint for 
 
-/prepareturn (gid, pid in cookies)
-/preparegame [POST] (wids, attempt_point, attempt_success, attempt_durs, time_remaining)
+/prepareturn (gid, pid in args)
+/preparegame [POST] (gid, pid, wids, attempt_point, attempt_success, attempt_durs, time_remaining)
 """
 
 
 def lambda_handler(event, context):
     params = event.get("queryStringParameters", {})
     body = json.loads(event.get("body", "{}"))
-    cookies = utils.parse_cookies(event.get("cookies", {}))
 
     params = {**params, **body} # combine body and query string since some endpoints use post
     route = event.get("rawPath", "Missing")
 
     if route == "/prepareturn":
-        return prepare_turn(params, cookies)
+        return prepare_turn(params)
     elif route == "/submitturn":
-        return submit_turn(params, cookies)
+        return submit_turn(params)
     else:
         return {"statusCode": 400,
                 "body": json.dumps({"message": f"Route is invalid: {route}"})}
 
 
-def prepare_turn(params, cookies):
+def prepare_turn(params):
     """
     Returns the wids and words remaining if it is the player's turn
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
 
     if not utils.auth_player(pid):
         return {"statusCode": 400,
@@ -60,14 +59,14 @@ def prepare_turn(params, cookies):
             "body": json.dumps(data)}
 
 
-def submit_turn(params, cookies):
+def submit_turn(params):
     """
     Submit words and update scores, update the game
 
     Did we just end a round? Set time remaining. If not bump the queue
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
 
     if not utils.auth_player(pid):
         return {"statusCode": 400,

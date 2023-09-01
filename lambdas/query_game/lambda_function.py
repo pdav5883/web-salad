@@ -9,8 +9,8 @@ Endpoint for
 
 /getendgame (no args)
 /getgame (gid in args)
-/getroster (gid in cookie)
-/getscoreboard (gid, pid in cookie)
+/getroster (gid in args)
+/getscoreboard (gid, pid in args)
 /getversion (no args)
 """
 
@@ -18,26 +18,25 @@ Endpoint for
 
 def lambda_handler(event, context):
     params = event.get("queryStringParameters", {})
-    cookies = utils.parse_cookies(event.get("cookies", {}))
 
     route = event.get("rawPath", "Missing")
 
     if route == "/getversion":
-        return get_version(params, cookies)
+        return get_version(params)
     elif route == "/getgame":
-        return get_game(params, cookies)
+        return get_game(params)
     elif route == "/getroster":
-        return get_roster(params, cookies)
+        return get_roster(params)
     elif route == "/getscoreboard":
-        return get_scoreboard(params, cookies)
+        return get_scoreboard(params)
     elif route == "/getendgame":
-        return get_endgame(params, cookies)
+        return get_endgame(params)
     else:
         return {"statusCode": 400,
                 "body": json.dumps({"message": f"Route is invalid: {route}"})}
 
 
-def get_version(params, cookies):
+def get_version(params):
     data = {"version": _version.__version__}
 
     return {"statusCode": 200,
@@ -45,11 +44,11 @@ def get_version(params, cookies):
             "body": json.dumps(data)}
     
 
-def get_game(params, cookies):
+def get_game(params):
     """
     Before joining game, see if it exists, and if it is started
 
-    If it exists and is not started, set gid cookie
+    If it exists and is not started
     """
     gid = params.get("gid", None)
 
@@ -68,18 +67,17 @@ def get_game(params, cookies):
                 "body": json.dumps({"message": f"Game with gid '{gid}' has already started"})}
 
     return {"statusCode": 200,
-            "cookies": [f"gid={gid}; SameSite=None; Secure"],
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": f"Found game with gid '{gid}'"})}
     
 
-def get_roster(params, cookies):
+def get_roster(params):
     """
     Return whether games started, list of (name, ready?) tuples for all players,
     gid, am i captain?, captain name
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
 
     if not utils.auth_player(pid):
         return {"statusCode": 400,
@@ -105,12 +103,12 @@ def get_roster(params, cookies):
             "body": json.dumps(data)}
 
 
-def get_scoreboard(params, cookies):
+def get_scoreboard(params):
     """
     Return gameover?, gid, my turn?, game status dict, scores dict, list of tuples of player names 
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
     
     if not utils.auth_player(pid):
         return {"statusCode": 400,
@@ -159,6 +157,6 @@ def get_scoreboard(params, cookies):
             "body": json.dumps(data)}
     
 
-def get_endgame(params, cookies):
+def get_endgame(params):
     pass
     

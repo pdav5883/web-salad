@@ -10,34 +10,33 @@ from common import _version
 Endpoint for 
 
 /submitgame (gid, num words, round times in args)
-/submitplayer (name in args, gid in cookie)
-/submitwords (word list in args, gid/pid in cookie)
-/preparegame [POST] (form data, gid/pid in cookie)
+/submitplayer (gid, name in args)
+/submitwords (gid, pid, word list in args)
+/preparegame [POST] (gid, pid, form data)
 """
 
 
 def lambda_handler(event, context):
     params = event.get("queryStringParameters", {})
     body = json.loads(event.get("body", "{}"))
-    cookies = utils.parse_cookies(event.get("cookies", {}))
 
     params = {**params, **body} # combine body and query string since some endpoints use post
     route = event.get("rawPath", "Missing")
 
     if route == "/submitgame":
-        return submit_game(params, cookies)
+        return submit_game(params)
     elif route == "/submitplayer":
-        return submit_player(params, cookies)
+        return submit_player(params)
     elif route == "/submitwords":
-        return submit_words(params, cookies)
+        return submit_words(params)
     elif route == "/preparegame":
-        return prepare_game(params, cookies)
+        return prepare_game(params)
     else:
         return {"statusCode": 400,
                 "body": json.dumps({"message": f"Route is invalid: {route}"})}
 
 
-def submit_game(params, cookies):
+def submit_game(params):
     """
     Create a new game with the params provided in request
     """
@@ -62,11 +61,11 @@ def submit_game(params, cookies):
                 "body": json.dumps({"message": f"Could not add new gid {new_gid}"})}
     
 
-def submit_player(params, cookies):
+def submit_player(params):
     """
-    Add player to game. gid in cookies, player name in request
+    Add player to game. gid, player name in request
     """
-    gid = cookies.get("gid", None)
+    gid = params.get("gid", None)
 
     if not utils.auth_game(gid):
         return {"statusCode": 400,
@@ -92,17 +91,17 @@ def submit_player(params, cookies):
         utils.update_entry(game)
 
     return {"statusCode": 200,
-            "cookies": [f"pid={player.id}"]}
+            "body": json.dumps({"pid": player.id})}
 
    
-def submit_words(params, cookies):
+def submit_words(params):
     """
     Add a player's words to game
 
     After testing with ajax, it looks like array will get passed as words[]: "w1,w2,w3"
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
 
     if not utils.auth_player(pid):
         return {"statusCode": 400,
@@ -126,13 +125,13 @@ def submit_words(params, cookies):
     return {"statusCode": 200}
 
 
-def prepare_game(params, cookies):
+def prepare_game(params):
     """
     Builds the teams and starts game. Only the captain can submit. Returns goto parameter telling
     the client where to go next: "roster" or "scoreboard" on success
     """
-    gid = cookies.get("gid", None)
-    pid = cookies.get("pid", None)
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
 
     if not utils.auth_player(pid):
         return {"statusCode": 400,
