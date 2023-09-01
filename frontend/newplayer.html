@@ -9,15 +9,19 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/newplayer.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-    <p class="game-id-text">Game: {{ gid }}</p>
+    <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
 
   <div class="container">
@@ -25,15 +29,11 @@
       <h2>Enter Your Name</h2>
     </section>
     <div class="center-block">
-      <form action="/submitplayer">
-        <input class="center-text" type="text" id="pname" name="pname" placeholder="McLovin">
-        <div class="center-text">
-          <input class="button-primary" type="submit" value="Submit">
-          {% for err_msg in get_flashed_messages() %}
-          <div class="row">{{ err_msg }}</div>
-          {% endfor %}
-        </div>
-      </form>
+      <input class="center-text" type="text" id="pname" placeholder="McLovin">
+      <div class="center-text">
+	<button id="submit-button" class="button-primary" onclick="submitPlayer()">Submit</button>
+	<p id="statustext"></p>
+      </div>
     </div>
 
   </div>
