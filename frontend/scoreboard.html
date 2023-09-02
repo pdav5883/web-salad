@@ -8,21 +8,25 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/scoreboard.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-    <p class="game-id-text">Game: {{ gid }}</p>
+      <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
 
   <div class="container">
     <section class="header score-header">
       <h1>Scoreboard</h1>
-        <h3>Round {{ status.round }}</h3>
+        <h3 id="round-text">Round __</h3>
     </section>
     <div class="score-width">
       <table class="score-table">
@@ -36,32 +40,19 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr id="team-a-score">
             <td>Team A</td>
-            <td>{{ scores.r1a }}</td>
-            <td>{{ scores.r2a }}</td>
-            <td>{{ scores.r3a }}</td>
-            <td>{{ scores.totala }}</td>
           </tr>
-          <tr>
+          <tr id="team-b-score">
             <td>Team B</td>
-            <td>{{ scores.r1b }}</td>
-            <td>{{ scores.r2b }}</td>
-            <td>{{ scores.r3b }}</td>
-            <td>{{ scores.totalb }}</td>
           </tr>
         </tbody>
       </table>
-      <div class="row center-text">
-        {% if myturn %}
-        <a href="/myturn/" class="button button-primary start-turn-button">Start Turn!</a>
-        {% else %}
-        <a href="/scoreboard/" class="button button-primary update-button">Update</a>
-        {% endif %}
+      <div id="button-div" class="row center-text">
       </div>
-      <div class="row center-text large-text">Words Remaining: {{ status.num_words }}</div>
-      <div class="row center-text large-text">Up Now: {{ status.curr_player }}</div>
-      <div class="row center-text large-text">Up Next: {{ status.next_player }}</div>
+      <div id="words-remaining-text" class="row center-text large-text">Words Remaining: __</div>
+      <div id="up-now-text" class="row center-text large-text">Up Now: __</div>
+      <div id="up-next-text" class="row center-text large-text">Up Next: __</div>
 
       <table class="roster-table">
         <thead>
@@ -70,15 +61,10 @@
             <th>Team B</th>
           </tr>
         </thead>
-        <tbody>
-          {% for name_a, name_b in teams %}
-          <tr>
-            <td>{{ name_a }}</td>
-            <td>{{ name_b }}</td>
-          </tr>
-          {% endfor %}
+        <tbody id="roster-table">
         </tbody>
       </table>
+      <p id="statustext"></p>
     </div>
   </div>
 </body>
