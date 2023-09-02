@@ -9,15 +9,19 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/roster.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-      <p class="game-id-text">Game: {{ gid }}</p>
+      <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
 
   <div class="container">
@@ -26,43 +30,21 @@
     </section>
 
     <table class="waiting-table">
-      <tbody>
-        {% for name, ready in names_ready %}
-        <tr>
-            <td class="pair-name">{{ name }}</td>
-            {% if ready %}
-            <td>&#10003</td>
-            {% else %}
-            <td>&#8230</td>
-            {% endif %}
-            {% if is_captain %}
-            <td><input type="text" class="pair-group" size="2"></td>
-            {% endif %}
-        </tr>
-        {% endfor %}
+      <tbody id="waiting-table">
       </tbody>
     </table>
     <div class="row double-button">
       <div class="one-half column center-text">
-        <a href="/roster/" class="button button-primary waiting-button">Update</a><br>
+	<button id="update-button" onclick="updateRoster()" class="button button primary waiting-button">Update</button><br>
       </div>
       <div class="one-half column center-text">
-        <button id="beep_button" class="button button-primary waiting-button">Beep Test</button><br>
+        <button id="beep-button" class="button button-primary waiting-button">Beep Test</button><br>
       </div>
     </div>
-    <div class="row center-text">
-      {% if is_captain %}
-      <div class="row">You are the Captain!<br>Enter pair-wise constraints using the same letter per pair.</div>
-      <div class="row">
-        <button id="start_button" class="button button-primary start-game-button">Start Game</button>
-      </div>
-      {% else %}
-      <div class="row">Waiting for {{ captain_name }} to start game...</div>
-      {% endif %}
-
+    <div id="captain-div" class="row center-text">
     </div>
+    <p id="statustext"></p>
   </div>
 
 </body>
-<script type="text/javascript" src="/static/scripts/roster.js"></script>
 </html>
