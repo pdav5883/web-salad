@@ -48,7 +48,7 @@ def get_game(params):
     """
     Before joining game, see if it exists, and if it is started
 
-    If it exists and is not started
+    If it exists and is not started return the number of words in game
     """
     gid = params.get("gid", None)
 
@@ -68,7 +68,8 @@ def get_game(params):
 
     return {"statusCode": 200,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": f"Found game with gid '{gid}'"})}
+            "body": json.dumps({"message": f"Found game with gid '{gid}'",
+                                "numwords": game.words_per_player})}
     
 
 def get_roster(params):

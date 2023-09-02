@@ -9,15 +9,19 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/newwords.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-    <p class="game-id-text">Game: {{ gid }}</p>
+    <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
 
   <div class="container">
@@ -25,15 +29,12 @@
       <h2>Put Your Words<br>In The Bowl</h2>
     </section>
 
-    <div class="center-block">
-      <form action="/submitwords">
-        {% for index in range(num_words | int) %}
-        <input type="text" name="words[]" value=""><br>
-        {% endfor %}
-        <div class="center-text">
-          <input class="button-primary" type="submit" value="Submit">
-        </div>
-      </form>
+    <div id="main-block" class="center-block">
+      <!--<input type="text" name="words[]" value=""><br>-->
+      <div class="center-text">
+	<button id="submit-button" class="button-primary" onclick="submitWords()">Submit</button>
+	<p id="statustext"></p>
+      </div>
     </div>
   </div>
 </body>

@@ -1,6 +1,6 @@
 
 $(document).ready( function() {
-  $("#game-id-text").html(sessionStorage.getItem("gid"))
+  $("#game-id-text").html($("game-id-text").html().replace("__", sessionStorage.getItem("gid")))
 })
 
 function submitPlayer() {
