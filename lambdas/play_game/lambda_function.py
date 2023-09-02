@@ -9,7 +9,7 @@ from common import _version
 Endpoint for 
 
 /prepareturn (gid, pid in args)
-/preparegame [POST] (gid, pid, wids, attempt_point, attempt_success, attempt_durs, time_remaining)
+/submitturn [POST] (gid, pid, wids, attempt_point, attempt_success, attempt_durs, time_remaining)
 """
 
 
@@ -54,7 +54,7 @@ def prepare_turn(params):
     word_strs = [word.word for word in words]
     time_remaining = game.time_remaining
 
-    data = {"myturn": True, "gid": gid, "wids": wids, "words": word_strs, "time_remaing": time_remaining}
+    data = {"myturn": True, "gid": gid, "wids": wids, "words": word_strs, "time_remaining": time_remaining}
 
     return {"statusCode": 200,
             "headers": {"Content-Type": "application/json"},
