@@ -1,90 +1,140 @@
-let start_button = document.getElementById("start_button")
-let start_box = document.getElementById("start_box")
-let submit_button = document.getElementById("submit_button")
-let submit_box = document.getElementById("submit_box")
-let yes_button = document.getElementById("yes_button")
-let no_button = document.getElementById("no_button")
-let yes_no_box = document.getElementById("yes_no_box")
-let current_word = document.getElementById("current_word")
-let time_remaining = document.getElementById("time_remaining")
-let word_table = document.getElementById("word_table")
+//let start_button = document.getElementById("start_button")
+//let start_box = document.getElementById("start_box")
+//let submit_button = document.getElementById("submit_button")
+//let submit_box = document.getElementById("submit_box")
+//let yes_button = document.getElementById("yes_button")
+//let no_button = document.getElementById("no_button")
+//let yes_no_box = document.getElementById("yes_no_box")
+//let current_word = document.getElementById("current_word")
+//let time_remaining = document.getElementById("time_remaining")
+//let word_table = document.getElementById("word_table")
 let audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);
-let timer
 
-let next_word = words.pop()
-let next_wid = wids.pop()
+var words
+var wids
+var counter
+var next_word
+var next_wid
+var attempt_start
+var timer
 
-let attempt_words = []
-let attempt_wids = []
-let attempt_correct = [] // true if correct, false if miss, null if no answer
-let attempt_durs = [] // the counter value when this attempt ends
+var attempt_words = []
+var attempt_wids = []
+var attempt_correct = [] // true if correct, false if miss, null if no answer
+var attempt_durs = [] // the counter value when this attempt ends
 
-let counter = counter_start
-let attempt_start = counter
+const mark_corr = "\u2713"
+const mark_miss = "\u2717"
+const color_corr = "#33C433"
+const color_miss = "#FF1B09"
 
-yes_button.style.visibility = "hidden"
-no_button.style.visibility = "hidden"
-yes_no_box.style.visibility = "hidden"
-submit_button.style.visibility = "hidden"
-submit_box.style.visibility = "hidden"
-word_table.style.visibility = "hidden"
-time_remaining.textContent = counter
 
-function start_turn() {
-    start_button.style.visibility = "hidden"
-    start_box.style.visibility = "hidden"
-    yes_button.style.visibility = "visible"
-    no_button.style.visibility = "visible"
-    yes_no_box.style.visibility = "visible"
-    current_word.textContent = next_word
+$(document).ready( function() {
+  $("#game-id-text").html($("#game-id-text").html().replace("__", sessionStorage.getItem("gid")))
+  
+  $.ajax({
+    type: "GET",
+    url: api_url_prepareturn,
+    data: {"gid": sessionStorage.getItem("gid"), "pid": sessionStorage.getItem("pid")},
+    crossDomain: true,
 
-    timer = setInterval(cycle_timer, 1000)
+    success: function(data) {
+      $("#statustext").html("")
+      if (!data.myturn) {
+	window.location.href = "scoreboard.html"
+      }
+
+      words = data.words
+      wids = data.wids
+      counter = data.time_remaining
+
+      next_word = words.pop()
+      next_wid = wids.pop()
+      attempt_start = counter
+
+      $("#time_remaining").html(counter)
+      $("#yes_button").hide()
+      $("#no_button").hide()
+      $("#yes_no_box").hide()
+      $("#submit_button").hide()
+      $("#submit_box").hide()
+      $("#word_table").hide()
+
+      $("#start_button").on("click", function() {
+	startTurn()
+	audioCtx.resume()
+      })
+
+      $("#yes_button").on("click", function() {
+	correct()
+	next()
+      })
+
+      $("#no_button").on("click", function() {
+	miss()
+	next()
+      })
+
+      $("#submit_button").on("click", function() {
+	submitTurn()
+      })   
+    },
+    
+    error: function(err) {
+      const message = JSON.parse(err.responseText).message
+      $("#statustext").html(message)
+    }
+  })
+})
+
+
+function startTurn() {
+  start_button.style.visibility = "hidden"
+  start_box.style.visibility = "hidden"
+  yes_button.style.visibility = "visible"
+  no_button.style.visibility = "visible"
+  yes_no_box.style.visibility = "visible"
+  current_word.textContent = next_word
+
+  $("#start_button").show()
+  $("#start_box").hide()
+  $("#yes_button").show()
+  $("#no_button").show()
+  $("#yes_no_box").show()
+  $("#current_word").html(next_word)
+
+  timer = setInterval(cycle_timer, 1000)
 }
 
-function stop_turn() {
-    clearInterval(timer)
-    yes_button.style.visibility = "hidden"
-    no_button.style.visibility = "hidden"
-    yes_no_box.style.visibility = "hidden"
-    submit_button.style.visibility = "visible"
-    submit_box.style.visibility = "visible"
-    current_word.textContent = ""
+function stopTurn() {
+  clearInterval(timer)
+  $("#yes_button").hide()
+  $("#no_button").hide()
+  $("#yes_no_box").hide()
+  $("#submit_button").show()
+  $("#submit_box").show()
+  $("#current_word").html("")
 
-    // display correct/missed words
-    let addItem = function (word, mark, mark_color) {
-        let tbody = document.getElementById("word_table_body")
-        let tr = document.createElement("tr")
-        let td1 = document.createElement("td")
-        let td2 = document.createElement("td")
-        td1.appendChild(document.createTextNode(word))
-        td2.appendChild(document.createTextNode(mark))
-        td2.style.color = mark_color
-        document.createSty
-        tr.appendChild(td1)
-        tr.appendChild(td2)
-        tbody.appendChild(tr)
+  // display correct/missed words
+  var addItem = function (word, mark, mark_color) {
+    var row = $("<tr></tr>")
+    row.append($("<td></td>").text(word))
+    row.append($("<td></td>").text(mark).css("color", mark_color))
+    $("#word_table_body").append(row)
+  }
+
+  for(var i=0; i < attempt_words.length; i++){
+    if(attempt_correct[i] == true) {
+      addItem(attempt_words[i], mark_corr, color_corr)
     }
-
-    let mark_corr = "\u2713"
-    let mark_miss = "\u2717"
-    let color_corr = "#33C433"
-    let color_miss = "#FF1B09"
-
-    for(let i=0; i < attempt_words.length; i++){
-        if(attempt_correct[i] == true) {
-            addItem(attempt_words[i], mark_corr, color_corr)
-        }
-        else if(attempt_correct[i] == false) {
-            addItem(attempt_words[i], mark_miss, color_miss)
-        }
-
+    else if(attempt_correct[i] == false) {
+      addItem(attempt_words[i], mark_miss, color_miss)
     }
-
-    word_table.style.visibility = "visible"
-
+  }
+  $("#word_table").show()
 }
 
-function submit_turn() {
+function submitTurn() {
     let form = document.createElement("form");
     form.setAttribute("method", "post");
     form.setAttribute("action", "/submitturn");
@@ -131,16 +181,15 @@ function miss() {
 }
 
 function next() {
-    if (words.length == 0) {
-        stop_turn()
-    }
-    else {
-        next_word = words.pop()
-        next_wid = wids.pop()
-        attempt_start = counter
-        current_word.textContent = next_word
-    }
-
+  if (words.length == 0) {
+    stopTurn()
+  }
+  else {
+      next_word = words.pop()
+      next_wid = wids.pop()
+      attempt_start = counter
+      $("#current_word").html(next_word)
+  }
 }
 
 //duration of the tone in milliseconds. Default is 500
@@ -166,7 +215,7 @@ function beep(duration, frequency, volume, type, callback) {
 
 function cycle_timer() {
     counter--
-    time_remaining.textContent = counter
+    $("#time_remaining").html(counter)
 
     if (counter == 0) { // or no time remaining
         beep(500, 300, 0.5, "triangle")
@@ -174,30 +223,9 @@ function cycle_timer() {
         attempt_wids.push(next_wid)
         attempt_correct.push(null)
         attempt_durs.push(attempt_start - counter)
-        stop_turn()
+        stopTurn()
     } else if (counter == 5) { // beep for five second warning
         beep(100, 500, 0.5, "sine")
     }
 }
-
-start_button.onclick = function() {
-    start_turn()
-    audioCtx.resume()
-}
-
-yes_button.onclick = function() {
-    correct()
-    next()
-}
-
-no_button.onclick = function() {
-    miss()
-    next()
-}
-
-submit_button.onclick = function() {
-    submit_turn()
-}
-
-
 

@@ -9,28 +9,37 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/myturn.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-    <p class="game-id-text">Game: {{ gid }}</p>
+      <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
+  
   <div id="time_remaining" class="time-box">
     00
   </div>
+  
   <div id="current_word" class="word-box">
     &#9679&#9679&#9679
   </div>
+  
   <div id="start_box" class="bottom-box">
     <button id="start_button" class="button-primary turn-button">Start</button>
   </div>
+  
   <div id="submit_box" class="bottom-box">
     <button id="submit_button" class="button-primary turn-button">Submit</button>
   </div>
+  
   <div id="yes_no_box" class="bottom-box">
     <div class="row">
       <div class="one-half column no-margin center-text">
@@ -41,18 +50,12 @@
       </div>
     </div>
   </div>
+  <p id="statustext"></p>
+  
   <table id="word_table" class="word-table">
     <tbody id="word_table_body">
     </tbody>
   </table>
 
-
-
 </body>
-<script type="text/javascript">
-  var words = {{ words|safe }}
-  var wids = {{ wids|safe }}
-  var counter_start = {{ time_remaining }}
-</script>
-<script type="text/javascript" src="/static/scripts/myturn.js"></script>
 </html>
