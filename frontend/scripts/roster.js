@@ -64,7 +64,7 @@ $(document).ready( function() {
 	row.setAttribute("class", "row")
 	var button = document.createElement("button")
 	button.setAttribute("class", "button button-primary start-game-button")
-	button.innerHTML = "Star Game"
+	button.innerHTML = "Start Game"
 	button.onclick = startGame
 	
 	row.appendChild(button)

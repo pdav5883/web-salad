@@ -8,20 +8,24 @@
   <!-- FONT -->
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <!-- CSS -->
-  <link rel="stylesheet" href="/static/styles/normalize.css">
-  <link rel="stylesheet" href="/static/styles/skeleton.css">
-  <link rel="stylesheet" href="/static/styles/custom.css">
+  <link rel="stylesheet" href="/styles/normalize.css">
+  <link rel="stylesheet" href="/styles/skeleton.css">
+  <link rel="stylesheet" href="/styles/custom.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <!-- JQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <script src="/scripts/api_url.js"></script>
+  <script src="/scripts/gameover.js"></script>
 </head>
 <body>
   <div class="game-id-box">
-    <p class="game-id-text">Game: {{ gid }}</p>
+      <p id="game-id-text" class="game-id-text">Game: __</p>
   </div>
 
   <div class="container">
     <section class="header score-header">
-      <h1>{{ winner_str }}</h1>
+      <h1 id="winner_str"></h1>
     </section>
     <div class="score-width">
       <table class="score-table">
@@ -35,26 +39,20 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr id="team-a-score">
             <td>Team A</td>
-            <td>{{ scores.r1a }}</td>
-            <td>{{ scores.r2a }}</td>
-            <td>{{ scores.r3a }}</td>
-            <td>{{ scores.totala }}</td>
           </tr>
-          <tr>
+          <tr id="team-b-score">
             <td>Team B</td>
-            <td>{{ scores.r1b }}</td>
-            <td>{{ scores.r2b }}</td>
-            <td>{{ scores.r3b }}</td>
-            <td>{{ scores.totalb }}</td>
           </tr>
         </tbody>
       </table>
 
-      <div class="row final-stats">MVP: {{ stats.mvp_name }}</div>
-      <div class="row final-stats">Hardest Word: {{ stats.hardest_word }}</div>
-      <div class="row final-stats">Easiest Word: {{ stats.easiest_word }}</div>
+      <p id="statustext"></p>
+      
+      <div id="mvp_name" class="row final-stats">MVP: __</div>
+      <div id="hardest_word" class="row final-stats">Hardest Word: __</div>
+      <div id="easiest_word" class="row final-stats">Easiest Word: __</div>
       <br>
       <div class="row center-text">
         <a href="/" class="button button-primary">Play Again!</a>
@@ -75,17 +73,8 @@
             <th>Total</th>
           </tr>
         </thead>
-        <tbody>
-          {% for name, r1, r2, r3, tot in stats.teama %}
-          <tr>
-            <td>{{ name }}</td>
-            <td>{{ r1 }}</td>
-            <td>{{ r2 }}</td>
-            <td>{{ r3 }}</td>
-            <td>{{ tot }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
+        <tbody id="box-score-table-a">
+	</tbody>
       </table>
 
       <div class="row center-text large-text">Team B</div>
@@ -99,16 +88,7 @@
             <th>Total</th>
           </tr>
         </thead>
-        <tbody>
-          {% for name, r1, r2, r3, tot in stats.teamb %}
-          <tr>
-            <td>{{ name }}</td>
-            <td>{{ r1 }}</td>
-            <td>{{ r2 }}</td>
-            <td>{{ r3 }}</td>
-            <td>{{ tot }}</td>
-          </tr>
-          {% endfor %}
+        <tbody id="box-score-table-b">
         </tbody>
       </table>
 
@@ -123,16 +103,7 @@
             <th>Avg</th>
           </tr>
         </thead>
-        <tbody>
-          {% for word, r1, r2, r3, avg in stats.words %}
-          <tr>
-            <td>{{ word }}</td>
-            <td>{{ r1 }}</td>
-            <td>{{ r2 }}</td>
-            <td>{{ r3 }}</td>
-            <td>{{ avg }}</td>
-          </tr>
-          {% endfor %}
+        <tbody id="box-score-table-words">  
         </tbody>
       </table>
     </div>
@@ -141,33 +112,3 @@
 </body>
 </html>
 
-
-<!--
-<!doctype html>
-<title>Game Over</title>
-<h1>{{ winner_str }}</h1>
-
-<h3> Team A: {{ score_a }}</h3>
-<ul>
-{% for name in names_a %}
-    <li>{{ name }}</li>
-{% endfor %}
-</ul>
-
-<h3> Team B: {{ score_b }}</h3>
-<ul>
-{% for name in names_b %}
-    <li>{{ name }}</li>
-{% endfor %}
-</ul>
-
-<h3> Game Stats </h3>
-<ul>
-    <li>MVP: {{ mvp_name }} ({{ mvp_points }} points)</li>
-    <li>Hardest Word: {{ hardest_word }} ({{ hardest_time }} seconds)</li>
-    <li>Easiest Word: {{ easiest_word }} ({{ easiest_time }} seconds)</li>
-</ul>
-
-
-<a href="/">Play Again!</a>
--->
