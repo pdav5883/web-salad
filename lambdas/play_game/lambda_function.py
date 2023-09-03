@@ -95,9 +95,10 @@ def submit_turn(params):
 
     # mark words as done for this round
     for wid, point in zip(attempt_wids, attempt_point):
-        word = utils.get_entry_by_id(wid, model.Word)
-        setattr(word, f"r{game.round}_done", True)
-        utils.update_entry(word)
+        if point:
+            word = utils.get_entry_by_id(wid, model.Word)
+            setattr(word, f"r{game.round}_done", True)
+            utils.update_entry(word)
 
     if time_remaining > 0:
         # the game is over!
