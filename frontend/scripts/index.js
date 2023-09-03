@@ -1,5 +1,6 @@
 
 $(document).ready( function() {
+  $("#statustext").hide()
   $.get(api_url_getversion, function(data) {
     $("#version").html($("#version").html().replace("__", data.version))
   })
@@ -16,6 +17,7 @@ function joingame() {
 
     success: function(data) {
       $("#statustext").html("")
+      $("#statustext").hide()
       sessionStorage.setItem("gid", gid)
       window.location.href = "newplayer.html"
     },
@@ -23,6 +25,7 @@ function joingame() {
     error: function(err) {
       const message = JSON.parse(err.responseText).message
       $("#statustext").html(message)
+      $("#statustext").show()
     }
   })
 }

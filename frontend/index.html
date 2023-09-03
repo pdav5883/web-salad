@@ -18,8 +18,17 @@
   <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
   <script src="/scripts/api_url.js"></script>
   <script src="/scripts/index.js"></script>
+  <script src="/scripts/menu.js"></script>
 </head>
 <body>
+  <div class="navbar-spacer"></div>
+  <nav class="navbar">
+    <div id="navmenucontainer" class="container navcontainer">
+      <script>
+        document.getElementById("navmenucontainer").innerHTML = navmenu
+      </script>
+    </div>
+  </nav>
   <div class="container">
     <section class="header welcome-title">
       <h1>Welcome to Salad Bowl</h1>
@@ -34,7 +43,7 @@
       </div>
     </div>
     <div class="footer">
-      <div class="row center-text" id="version">Web Salad v __</div>
+      <div class="row center-text" id="version">Version __</div>
       <div class="row center-text">A <a href="https://home.bearloves.rocks">BLR</a> Project</div>
       <div class="row center-text">Check Out the <a href="https://github.com/pdav5883/web-salad">Source Code</a></div>
     </div>
