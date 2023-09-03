@@ -98,7 +98,7 @@ def get_roster(params):
     captain_name = captain.name
     is_captain = (pid == captain.id)
 
-    data = {"started": False, "names_ready": names_ready, "gid": gid,
+    data = {"started": False, "names_ready": names_ready,
             "is_captain": is_captain, "captain_name": captain_name}
 
     return {"statusCode": 200,
@@ -154,7 +154,7 @@ def get_scoreboard(params):
 
     myturn = (pid == curr_id)
 
-    data = {"complete": False, "gid": gid, "myturn": myturn, "status": game_status,
+    data = {"complete": False, "myturn": myturn, "status": game_status,
             "scores": scores, "teams": teams}
 
     return {"statusCode": 200,
@@ -163,5 +163,130 @@ def get_scoreboard(params):
     
 
 def get_endgame(params):
-    pass
+    """
+    Return scores and stats to gameover page
+    """
+    gid = params.get("gid", None)
+    pid = params.get("pid", None)
     
+    if not utils.auth_player(pid):
+        return {"statusCode": 400,
+                "body": json.dumps({"message": f"Invalid pid '{pid}'"})}
+        
+    game = utils.get_entry_by_id(gid, model.Game)
+    
+    if not game.complete:
+        return {"statusCode": 200,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps({"complete": False})}
+
+    scores_a, scores_b = utils.get_scores_by_round_by_game_id(gid)
+    scores = {"r1a": scores_a[0],
+              "r1b": scores_b[0],
+              "r2a": scores_a[1],
+              "r2b": scores_b[1],
+              "r3a": scores_a[2],
+              "r3b": scores_b[2],
+              "totala": sum(scores_a),
+              "totalb": sum(scores_b)}
+
+    if sum(scores_a) > sum(scores_b):
+        winner_str = "Team A Wins!"
+    elif sum(scores_a) < sum(scores_b):
+        winner_str = "Team B Wins!"
+    else:
+        winner_str = "Woah, a tie!!"
+
+    teama_stats = get_team_stats(gid, "a")
+    teamb_stats = get_team_stats(gid, "b")
+    words_stats = get_word_stats(gid)
+
+    mvp_a = teama_stats[0]
+    mvp_b = teamb_stats[0]
+    if mvp_a[4] > mvp_b[4]:
+        mvp_name = mvp_a[0]
+    elif mvp_a[4] < mvp_b[4]:
+        mvp_name = mvp_b[0]
+    else:
+        mvp_name = f"{mvp_a[0]}/{mvp_b[0]}"
+
+    stats = {"teama": teama_stats,
+             "teamb": teamb_stats,
+             "words": words_stats,
+             "mvp_name": mvp_name,
+             "hardest_word": words_stats[0][0],
+             "easiest_word": words_stats[-2][0]}
+
+    data = {"complete": True, "winner_str": winner_str, "scores": scores, "stats": stats}
+
+    return {"statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(data)}
+
+
+def get_team_stats(gid: str, team: str):
+    """
+    Return a list of tuples with stats for a full team. Each entry in list corresponds to player. List is sorted by
+    total points scored by player. Each tuple contains name str, net r1 score, r2 score int, r3 score int, total score
+    int.
+    """
+    attempts = utils.get_entries_by_gid_type(gid, model.Attempt, {"team": team})
+    players = utils.get_entries_by_gid_type(gid, model.Player, {"team": team})
+
+    # dict with pid as key, list of net score for each round is value
+    player_data = {player.id: 3 * [0] for player in players}
+
+    for attempt in attempts:
+        if not attempt.point:
+            continue
+
+        point = 1 if attempt.success else -1
+        player_data[attempt.pid][attempt.round - 1] += point
+
+    # need lookup for player name since attempts only include pid
+    pid_to_name = {player.id: player.name for player in players}
+
+    player_data_return = []
+    for pid, rounds in player_data.items():
+        player_data_return.append((pid_to_name[pid], rounds[0], rounds[1], rounds[2], sum(rounds)))
+
+    player_data_return.sort(key=lambda x: x[4], reverse=True)
+    return player_data_return
+
+
+def get_word_stats(gid: str):
+    """
+    Each entry in list is tuple of word data. Tuple contains word str, r1 time, r2 time, r3 time, avg time. List is
+    sorted by avg time. Extra list entry for total avg.
+    """
+    attempts = utils.get_entries_by_gid_type(gid, model.Attempt)
+    words = utils.get_entries_by_gid_type(gid, model.Word)
+
+    word_data = {word.id: 3 * [0] for word in words}
+
+    wid_to_word = {word.id: word.word for word in words} 
+
+    for attempt in attempts:
+        word_data[attempt.wid][attempt.round - 1] += attempt.seconds
+
+    word_data_return = []
+    for wid, rounds in word_data.items():
+        word_data_return.append((wid_to_word[wid], rounds[0], rounds[1], rounds[2], round(sum(rounds) / 3)))
+
+    word_data_return.sort(key=lambda x: x[4], reverse=True)
+
+    # add average row
+    total_r1 = sum([x[1] for x in word_data_return])
+    total_r2 = sum([x[2] for x in word_data_return])
+    total_r3 = sum([x[3] for x in word_data_return])
+    num_words = len(word_data_return)
+
+    avg_r1 = round(total_r1 / num_words, 1)
+    avg_r2 = round(total_r2 / num_words, 1)
+    avg_r3 = round(total_r3 / num_words, 1)
+    avg_total = round((total_r1 + total_r2 + total_r3) / (3 * num_words), 1)
+
+    word_data_return.append(("Average", avg_r1, avg_r2, avg_r3, avg_total))
+
+    return word_data_return
+
