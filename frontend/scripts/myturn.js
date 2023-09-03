@@ -20,7 +20,8 @@ var timer
 
 var attempt_words = []
 var attempt_wids = []
-var attempt_correct = [] // true if correct, false if miss, null if no answer
+var attempt_point = [] // true if someone got a point
+var attempt_success = [] // true if guessing team got point
 var attempt_durs = [] // the counter value when this attempt ends
 
 const mark_corr = "\u2713"
@@ -106,6 +107,7 @@ function startTurn() {
   timer = setInterval(cycle_timer, 1000)
 }
 
+
 function stopTurn() {
   clearInterval(timer)
   $("#yes_button").hide()
@@ -124,61 +126,64 @@ function stopTurn() {
   }
 
   for(var i=0; i < attempt_words.length; i++){
-    if(attempt_correct[i] == true) {
+    if(attempt_success[i] == true) {
       addItem(attempt_words[i], mark_corr, color_corr)
     }
-    else if(attempt_correct[i] == false) {
+    else if(attempt_success[i] == false) {
       addItem(attempt_words[i], mark_miss, color_miss)
     }
   }
   $("#word_table").show()
 }
 
+
 function submitTurn() {
-    let form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.setAttribute("action", "/submitturn");
+  $.ajax({
+    type: "POST",
+    url: api_url_submitturn,
+    contentType: "application/json",
+    data: JSON.stringify({
+      "gid": sessionStorage.getItem("gid"),
+      "pid": sessionStorage.getItem("pid"),
+      "attempt_wids": attempt_wids,
+      "attempt_point": attempt_point,
+      "attempt_success": attempt_success,
+      "attempt_durs": attempt_durs,
+      "time_remaining": counter
+    }),
 
-    let addField = function( key, value ){
-        let hiddenField = document.createElement("input");
-        hiddenField.setAttribute("type", "hidden");
-        hiddenField.setAttribute("name", key);
-        hiddenField.setAttribute("value", value );
+    crossDomain: true,
 
-        form.appendChild(hiddenField);
-    };
+    success: function(data) {
+      $("#statustext").html("")
+      window.location.href = "scoreboard.html"
+    },
 
-    for(let i=0; i < attempt_wids.length; i++){
-        addField("attempt_wids", attempt_wids[i])
+    error: function(err) {
+      const message = JSON.parse(err.responseText).message
+      $("#statustext").html(message)
     }
-
-    for(let i=0; i < attempt_correct.length; i++){
-        addField("attempt_correct", attempt_correct[i])
-    }
-
-    for(let i=0; i < attempt_durs.length; i++){
-        addField("attempt_durs", attempt_durs[i])
-    }
-
-    addField("time_remaining", counter)
-
-    document.body.appendChild(form);
-    form.submit();
+  })
 }
+
 
 function correct() {
     attempt_words.push(next_word)
     attempt_wids.push(next_wid)
-    attempt_correct.push(true)
+    attempt_point.push(true)
+    attempt_success.push(true)
     attempt_durs.push(attempt_start - counter)
 }
+
 
 function miss() {
     attempt_words.push(next_word)
     attempt_wids.push(next_wid)
-    attempt_correct.push(false)
+    attempt_point.push(true)
+    attempt_success.push(false)
     attempt_durs.push(attempt_start - counter)
 }
+
 
 function next() {
   if (words.length == 0) {
@@ -191,6 +196,7 @@ function next() {
       $("#current_word").html(next_word)
   }
 }
+
 
 //duration of the tone in milliseconds. Default is 500
 //frequency of the tone in hertz. default is 440
@@ -214,18 +220,20 @@ function beep(duration, frequency, volume, type, callback) {
 };
 
 function cycle_timer() {
-    counter--
-    $("#time_remaining").html(counter)
+  counter--
+  $("#time_remaining").html(counter)
 
-    if (counter == 0) { // or no time remaining
-        beep(500, 300, 0.5, "triangle")
-        attempt_words.push(next_word)
-        attempt_wids.push(next_wid)
-        attempt_correct.push(null)
-        attempt_durs.push(attempt_start - counter)
-        stopTurn()
-    } else if (counter == 5) { // beep for five second warning
-        beep(100, 500, 0.5, "sine")
-    }
+  if (counter == 0) { // or no time remaining
+    beep(500, 300, 0.5, "triangle")
+    attempt_words.push(next_word)
+    attempt_wids.push(next_wid)
+    attempt_point.push(false)
+    attempt_success.push(false)
+    attempt_durs.push(attempt_start - counter)
+    stopTurn()
+  }
+  else if (counter == 5) { // beep for five second warning
+    beep(100, 500, 0.5, "sine")
+  }
 }
 
