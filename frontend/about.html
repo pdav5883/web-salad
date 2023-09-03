@@ -29,26 +29,34 @@
   </nav>
   <div class="smalltop container">
     <h2 id="overview" class="smallbottom">About web-salad</h2>
-    <p><em>web-salad</em> is a thing.</p>
-    
-    <p class="nextpar">More words</p>
-    
-    <p class="nextpar">Here is a list about <em>web-salad</em>:</p>
+    <p><em>web-salad</em> is the original Bear Loves Rocks project, predating the site itself. Back in the innocent days of March and April 2020, I embarked on a project to fill my new-found lockdown time with something interesting. We had played Salad Bowl with friends and family for years, and I thought it would be fun to turn that game into something that could be played during a pandemic.</p>
+
+    <p class="nextpar">Thus <em>web-salad</em> was born, and I learned a lot about how hard it is to build something that looks half-way decent from scratch that also does a real-ish thing. My first version was built as an application in the Python Flask framework running on a standard server, with a SQL database to store game data also on that server. It worked, and it was a fun project -- it even got used for its intended purpose of playing Salad Bowl among socially distant friends.</p>
+
+    <p class="nextpar">Fast forward to 2023, and the Bear Loves Rocks empire has grown to four projects in the dropdown menu. But it's really only three because the <em>web-salad</em> link just takes you to a "Work in Progress" page. Why? Hosting <em>web-salad</em> on an AWS server (i.e. EC2 instance) was only free for 12 months, so rather than pay a $2 bill every month to keep it alive with no one using it I turned it off. Until now.</p>
+
+    <p class="nextpar">The version of <em>web-salad</em> you're seeing on this site is a re-built version of the original to take advantage of a variety of AWS services that are in the free tier, making the new <em>web-salad</em> hosting bill a much more palatable $0. Whereas the original version was built to run on a server the current version is "serverless", meaning that there is not a (virtual) computer that has been provisioned for the task of always listening for <em>web-salad</em> game events and responding with the data necessary to play a game.</p>
+
+    <p class="nextpar">Instead there is a group of different resources that collectively have a much smaller computing footprint (small enough to be free) and only do things when game events are detected. The game experience itself is identical between the two versions -- the only difference is how the functionality is split between the client (i.e. your browser), the database, and code that executes within AWS when your browser needs to get or send data to the database (e.g. to get the score or submit results from your turn).
+
+    <p class="center nextpar">See the <a href="https://github.com/pdav5883/web-salad/tree/server">server</a> and <a href="https://github.com/pdav5883/web-salad/tree/serverless">serverless</a> source code.
+   
+    <h3 id="flow" class="smallbottom">How it Works: Game Flow</h3>
+
+    <p>A <em>web-salad</em> proceeds through several steps in mostly linear fashion:</p>
+
     <ul class="nextpar">
-      <li><strong>Item</strong>: Words</li>
-      <li><strong>Other Item</strong>: Other words</li>
+      <li><strong>Create Game</strong>: The salad bowl ringleader creates a new game with her desired parameters at <a>/admin.html</a> and tells her friends what the game ID is.</li>
+      <li><strong>Join Game</strong>: Said friends join the game by entering the game ID at the homepage.</li>
+      <li><strong>New Player</strong>: Each player enters their name, which puts them into the database as game participants.</li>
+      <li><strong>New Words</strong>: Each player enters their salad bowl words, which are written to the database.</li>
+      <li><strong>Wait for Players</strong>: All players are directed to a waiting page, where they can see the status of their fellow participants.</li>
+      <li><strong>Start Game</strong>: Only the captain (whoever joined the game first) can start the game, and they can only do that once all players who have joined the game have submitted their words. They have the option of entering constraints requiring certain people to be on different teams. This feature was added to allow a virtual game to be "fairer". With a virtual game played over video, there is a significant delay, so if two people are in the same room together they would have an advantage on the same team.</li>
+      <li><strong>Scoreboard</strong>: Once the game has started, all players are directed to a scoreboard page that shows the score by round and who is currently up. The player that is currently up will have a button available to begin their turn.</li>
+      <li><strong>My Turn</strong>: When it is your turn you will see an empty page with a start button. Once you hit start, a timer will start counting down and you'll see a word from the bowl along with a "correct" and "miss" button. Depending on how your team does on that word, you'll hit one of those buttons or run out of time. If you hit a button, you'll receive the next word from the bowl. Once your turn is over, you'll see a summary of your words, and submit them for scoring.</li>
+      <li><strong>Gameover</strong>: Once the the last word in the third round has been guessed, all players will be directed to a gameover page that shows the final score and some player and word stats.</li>
     </ul>
 
-    <p class="center nextpar">See the code <a href="https://github.com/pdav5883/web-salad">here</a>!
-    
-    <h3 id="flow" class="smallbottom">How it Works: Flow</h3>
-
-    <p>Words</p>
-
-    <p class="nextpar">More words.</p>
-    
-    <p class="center nextpar">See where the magic happens <a href="https://github.com/pdav5883/web-salad">here</a></p>
-    
 
     <h3 id="database" class="smallbottom">How it Works: Database</h3>
 
