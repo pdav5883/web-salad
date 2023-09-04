@@ -88,7 +88,7 @@
 
     <h3 id="frontend" class="smallbottom">How it Works: Frontend</h3>
 
-    <p>The third major difference between server and serverless versions is how much work your browser is doing to build the page that you're interacting with. In the original version, this work is almost nothing. In addition to doing all the backend work above, the Flask application at <a href="">app.py</a> also builds the page you see before you get it from the server. All that leaves is interactive formatting and data submission for the frontend scripts.</p>
+    <p>The third major difference between server and serverless versions is how much work your browser is doing to build the page that you're interacting with. In the original version, this work is almost nothing. In addition to doing all the backend work above, the Flask application at <a href="https://github.com/pdav5883/web-salad/blob/server/app.py">app.py</a> also builds the page you see before you get it from the server. All that leaves is interactive formatting and data submission for the frontend scripts.</p>
 
     <p class="nextpar">In the serverless version, your browser has a lot more work to do. When the HTML is received from the static S3 host (more on that below) there is no information there about the game you are playing -- just a skeleton of the page. When the page is loaded, the javascript that comes with it hits one or more of the API endpoints above to fetch the information it needs and populates the page with that information.</p>
 
