@@ -29,13 +29,13 @@
   </nav>
   <div class="smalltop container">
     <h2 id="overview" class="smallbottom">About web-salad</h2>
-    <p><em>web-salad</em> is the original Bear Loves Rocks project, predating the site itself. Back in the innocent days of March and April 2020, I embarked on a project to fill my new-found lockdown time with something interesting. We had played Salad Bowl with friends and family for years, and I thought it would be fun to turn that game into something that could be played during a pandemic.</p>
+    <p><em>web-salad</em> is the original Bear Loves Rocks project, predating the site itself. Back in the innocent days of March and April 2020, I embarked on a project to fill my newfound lockdown time with something interesting. We had played Salad Bowl with friends and family for years, and I thought it would be fun to turn that game into something that could be played during a pandemic.</p>
 
     <p class="nextpar">Thus <em>web-salad</em> was born, and I learned a lot about how hard it is to build something that looks half-way decent from scratch that also does a real-ish thing. My first version was built as an application in the Python Flask framework running on a standard server, with a SQL database to store game data also on that server. It worked, and it was a fun project -- it even got used for its intended purpose of playing Salad Bowl among socially distant friends.</p>
 
     <p class="nextpar">Fast forward to 2023, and the Bear Loves Rocks empire has grown to four projects in the dropdown menu. But it's really only three because the <em>web-salad</em> link just takes you to a "Work in Progress" page. Why? Hosting <em>web-salad</em> on an AWS server (i.e. EC2 instance) was only free for 12 months, so rather than pay a $2 bill every month to keep it alive with no one using it I turned it off. Until now.</p>
 
-    <p class="nextpar">The version of <em>web-salad</em> you're seeing on this site is a re-built version of the original to take advantage of a variety of AWS services that are in the free tier, making the new <em>web-salad</em> hosting bill a much more palatable $0. Whereas the original version was built to run on a server the current version is "serverless", meaning that there is not a (virtual) computer that has been provisioned for the task of always listening for <em>web-salad</em> game events and responding with the data necessary to play a game.</p>
+    <p class="nextpar">The version of <em>web-salad</em> you're seeing on this site is a re-build of the original to take advantage of a variety of AWS services that are in the free tier, making the new <em>web-salad</em> hosting bill a much more palatable $0. Whereas the original version was built to run on a server the current version is "serverless", meaning that there is not a (virtual) computer that has been provisioned for the task of always listening for <em>web-salad</em> game events and responding with the data necessary to play a game.</p>
 
     <p class="nextpar">Instead there is a group of different resources that collectively have a much smaller computing footprint (small enough to be free) and only do things when game events are detected. The game experience itself is identical between the two versions -- the only difference is how the functionality is split between the client (i.e. your browser), the database, and code that executes within AWS when your browser needs to get or send data to the database (e.g. to get the score or submit results from your turn).
 
@@ -43,7 +43,7 @@
    
     <h3 id="flow" class="smallbottom">How it Works: Game Flow</h3>
 
-    <p>A <em>web-salad</em> proceeds through several steps in mostly linear fashion:</p>
+    <p>A <em>web-salad</em> game proceeds through several steps in mostly linear fashion:</p>
 
     <ul class="nextpar">
       <li><strong>Create Game</strong>: The salad bowl ringleader creates a new game with her desired parameters at <a>/admin.html</a> and tells her friends what the game ID is.</li>
@@ -51,7 +51,7 @@
       <li><strong>New Player</strong>: Each player enters their name, which puts them into the database as game participants.</li>
       <li><strong>New Words</strong>: Each player enters their salad bowl words, which are written to the database.</li>
       <li><strong>Wait for Players</strong>: All players are directed to a waiting page, where they can see the status of their fellow participants.</li>
-      <li><strong>Start Game</strong>: Only the captain (whoever joined the game first) can start the game, and they can only do that once all players who have joined the game have submitted their words. They have the option of entering constraints requiring certain people to be on different teams. This feature was added to allow a virtual game to be "fairer". With a virtual game played over video, there is a significant delay, so if two people are in the same room together they would have an advantage on the same team.</li>
+      <li><strong>Start Game</strong>: Only the captain (whoever joined the game first) can start the game, and they can only do that once all players who have joined the game have submitted their words. Starting the game sorts players into two teams and randomly determines an order of players. The captain has the option of entering constraints requiring certain people to be on different teams. This feature was added to allow a virtual game to be "fairer". With a virtual game played over video, there is a significant delay, so if two people are in the same room together they would have an advantage on the same team.</li>
       <li><strong>Scoreboard</strong>: Once the game has started, all players are directed to a scoreboard page that shows the score by round and who is currently up. The player that is currently up will have a button available to begin their turn.</li>
       <li><strong>My Turn</strong>: When it is your turn you will see an empty page with a start button. Once you hit start, a timer will start counting down and you'll see a word from the bowl along with a "correct" and "miss" button. Depending on how your team does on that word, you'll hit one of those buttons or run out of time. If you hit a button, you'll receive the next word from the bowl. Once your turn is over, you'll see a summary of your words, and submit them for scoring.</li>
       <li><strong>Gameover</strong>: Once the the last word in the third round has been guessed, all players will be directed to a gameover page that shows the final score and some player and word stats.</li>
@@ -60,38 +60,44 @@
 
     <h3 id="database" class="smallbottom">How it Works: Database</h3>
 
-    <p>Words</p>
+    <p>Information about the history and state of a <em>web-salad</em> game is stored in four different types of entries in a database: Game, Player, Word, and Attempt. The first three are self-explanatory, and the fourth is a record of what happened when a clue-giver had a word up (did they get the point, how long did it take, etc).</p>
 
-    <p class="nextpar">More words.</p>
+    <p class="nextpar">One of the major differences between the server and serverless versions of the game is how the database is structured to store that information. In the original version, I used a SQL database with tables for each of the entry types. When the server needed to find information about the game (e.g. what is the score), it would query the database with joins across tables.</p>
 
-    <p class="center nextpar">See where the magic happens <a href="https://github.com/pdav5883/web-salad">here</a></p>
-    
+    <p class="nextpar">In the new version, I switched to a NoSQL key-value database in DynamoDB, since that is the only AWS database service that is in the always-free tier. Now there is just one table with all the entry types together, and queries are much less sophisticated so other parts of the application have to do a bit more work. Each entry has a unique ID, which can be used to look up the entry. For example there might be a game with ID "testgame", so if I wanted to grab that game and see if the "started" field was set I could do that trivially.<p>
+
+    <p class="nextpar">That won't work for a problem like "give me all the words that are part of testgame", which is necessary in the game flow. For problems like this, each entry has a field called "gid", which contains the game ID that the entry belongs to, and a field called "type" that contains whether the entry is a game, player, word, or attempt. There is then an "index" in the database that allows you to query elements by gid/type combination. Therefore the database could run a very fast query for "gid=testgame AND type=word" to solve the problem above. Those are the only two types of queries implemented in the database!</p>
+
+    <p class="center nextpar">See the data model <a href="https://github.com/pdav5883/web-salad/blob/serverless/lambdas/common/model.py">here</a></p>
+
 
     <h3 id="backend" class="smallbottom">How it Works: Backend</h3>
     
-    <p>Words</p>
+    <p>The second area of major change between server and serverless is the code that runs remotely (i.e. not in your browser) to interact with the database and compute useful pieces of information. An example of this backend code might be "write all of my submitted words to the database", or "submit and process the attempts from my turn that just finished".</p>
 
-    <p class="nextpar">More words.</p>
+    <p class="nextpar">In the old version, all of this code is in <a href="https://github.com/pdav5883/web-salad/blob/server/app.py">app.py</a>, which is the Flask application that the server runs. The server maps incoming requests with routes like <a>/submitwords</a> or <a>/submitturn</a> to Python code that interacts with the database and then builds the page that the client sees next.</p>
 
-    <p class="center nextpar">See where the magic happens <a href="https://github.com/pdav5883/web-salad">here</a></p>
-    
-    
+    <p class="nextpar">The serverless version achieves the same thing, but separates the database interaction and processing from the building and serving of the page. There are 11 "tasks" that comprise the database interaction and processing functionality. These tasks are broken up into three groups: tasks relating to querying the game, building the game, and playing the game. This division is arbitrary: it could have been one big group, or 11 small groups.
+
+    <p class="nextpar">Each group is assigned to an AWS Lambda function: <a href="https://github.com/pdav5883/web-salad/blob/serverless/lambdas/query_game/lambda_function.py">SaladQueryGame</a>, <a href="https://github.com/pdav5883/web-salad/blob/serverless/lambdas/build_game/lambda_function.py">SaladBuildGame</a>, and <a href="https://github.com/pdav5883/web-salad/blob/serverless/lambdas/play_game/lambda_function.py">SaladPlayGame</a>. In those functions you'll find most of the code from <a href="https://github.com/pdav5883/web-salad/blob/server/app.py">app.py</a> modified to use the new database. Lambda functions pop up in all of the BLR projects as the key service that makes things serverless.</p>
+
+    <p class="nextpar">Each of the 11 tasks is assigned an endpoint in API Gateway: for example <em>[long url]/getgame</em> and <em>[long url]/prepareturn</em>. AWS makes it easy to map these endpoints to the Lambda functions above, so when your browser sends a request to one of these endpoints AWS triggers the appropriate lambda and returns the results of that processing to your browser. As an example, here is what one of those requests looks like (click to see response): <a href="https://ij1tbqacxd.execute-api.us-east-1.amazonaws.com/getgame?gid=example">https://ij1tbqacxd.execute-api.us-east-1.amazonaws.com/getgame?gid=example</a></p>
+
+    <p class="nextpar">Finally, there is <a href="https://github.com/pdav5883/web-salad/blob/serverless/lambdas/common/utils.py">common code</a> that all of the Lambdas share, which actually is where most of the heavy lifting happens for database interaction. These common utilities are bundled into a lambda layer, which allows all three lambdas to import them independently without having to maintain the common code in each one.
+   
+
     <h3 id="frontend" class="smallbottom">How it Works: Frontend</h3>
 
-    <p>Words</p>
+    <p>The third major difference between server and serverless versions is how much work your browser is doing to build the page that you're interacting with. In the original version, this work is almost nothing. In addition to doing all the backend work above, the Flask application at <a href="">app.py</a> also builds the page you see before you get it from the server. All that leaves is interactive formatting and data submission for the frontend scripts.</p>
 
-    <p class="nextpar">More words.</p>
+    <p class="nextpar">In the serverless version, your browser has a lot more work to do. When the HTML is received from the static S3 host (more on that below) there is no information there about the game you are playing -- just a skeleton of the page. When the page is loaded, the javascript that comes with it hits one or more of the API endpoints above to fetch the information it needs and populates the page with that information.</p>
 
-    <p class="center nextpar">See where the magic happens <a href="https://github.com/pdav5883/web-salad">here</a></p>
+    <p class="center nextpar">See where the magic happens for the scoreboard page <a href="https://github.com/pdav5883/web-salad/blob/serverless/frontend/scripts/scoreboard.js">here</a></p>
    
 
     <h3 id="hosting" class="smallbottom">How it Works: Hosting</h3>
 
-    <p>Words</p>
-
-    <p class="nextpar">More words.</p>
-
-    <p class="center nextpar">See where the magic happens <a href="https://github.com/pdav5883/web-salad">here</a></p>
+    <p>A quick note on how the site is hosted. Like the rest of Bear Loves Rocks, <em>web-salad</em> is hosted as a static site on S3. Cloudfront is used to make the hosting more robust (e.g. by allowing https), and Route 53 points the <a>salad.bearloves.rocks</a> subdomain to the Cloudfront distribution. We already talked about it above, but the backend is a trio of lambdas with API Gateway taking care of connections and translation from request to lambda inputs and lambda outputs to response.</p>
   </div>
 </body>
 </html>
